@@ -3,7 +3,7 @@ public class Edge {
     int weight;
     Node toNode;
     Node fromNode;
-    public Edge(int edgeWeight, Node ToNode, Node FromNode) {
+    public Edge(Node FromNode, Node ToNode, int edgeWeight) {
         weight = edgeWeight;
         toNode = ToNode;
         fromNode = FromNode;
@@ -15,9 +15,10 @@ public class Edge {
     public void setToNode(Node newToNode){toNode = newToNode;}
     public void setFromNode(Node newFromNode){fromNode = newFromNode;}
 
-
     public int getWeight(){return weight;}
     public Node getToNode(){return toNode;}
     public Node getFromNode(){return fromNode;}
+    public void printInfo(){System.out.println("toNode = " + toNode + " fromNode = " + fromNode + " Wegith = " + weight);}
+
 
 }
