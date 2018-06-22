@@ -28,5 +28,9 @@ public class Node {
         return null;
     }
 
+    public String toString() {
+        return "<"+id+">";
+    }
+
 
 }

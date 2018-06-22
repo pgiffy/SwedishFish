@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.util.*;
 public class Network {
     ArrayList<Edge> edges;
@@ -8,7 +9,7 @@ public class Network {
     }
 
     public void addNode(){
-        nodes.add(new Node(nodes.size() + 1));
+        nodes.add(new Node(nodes.size()));
     }
     public void addEdge(Node fromNode, Node toNode, int weight){
         Edge newEdge = new Edge(fromNode, toNode, weight);
@@ -34,7 +35,14 @@ public class Network {
         }
     }
 
-    public void printDetails(){}
+    /**
+     * Prints network details to specified output file
+     */
+    public void printDetails(PrintWriter out) {
+        for(Edge edge: edges) {
+            out.println(edge.toString());
+        }
+    }
 
     public int numNodes(){
         return nodes.size();
