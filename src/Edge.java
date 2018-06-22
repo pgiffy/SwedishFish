@@ -9,7 +9,7 @@ public class Edge {
         fromNode = FromNode;
     }
 
-    public void setWeight(int newWeight){weight = newWeight;}
+    public void setWeight(int newWeight){ weight = newWeight;}
 
     //these for possible future merging edges
     public void setToNode(Node newToNode){toNode = newToNode;}
