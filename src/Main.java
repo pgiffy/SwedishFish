@@ -8,7 +8,7 @@ public class Main {
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
-        String importMode = "multiple";                                 //either single or multiple
+        String importMode = "single";                                 //either single or multiple
 
         ArrayList<Network> networks;
         if(importMode.equals("single")) {
@@ -114,7 +114,7 @@ public class Main {
 
         try {
             scan = new Scanner(inputFile);
-            scan.useDelimiter("#[\\s\\S]+?[\\n]");
+            scan.useDelimiter("#[\\s\\S]+?[\\n]"); //splits into graphs by # XXX
             while(scan.hasNext()) {
                 graphs.add(scan.next());
             }
