@@ -17,7 +17,23 @@ public class Network {
         fromNode.addEdge(newEdge);
     }
 
-    public void reducePath(){}
+    public void reducePath(Path toReduce){
+        ArrayList<Node> pathNodes = toReduce.getNodes();
+        int reduceWeight = toReduce.getWeight();
+        for(int i = 0; i < pathNodes.size()-1; i++){
+            if(getEdge(pathNodes.get(i),pathNodes.get(i+1)).getWeight()-reduceWeight == 0){
+                //if edge is 0 then it is removed
+                edges.remove(getEdge(pathNodes.get(i),pathNodes.get(i+1)));
+                //the reduce edge method in node should handle this delete but check later
+                pathNodes.get(i).reduceEdge(pathNodes.get(i+1),reduceWeight);
+            }else {
+                //just reduces the weight of an edge if it will not go to zero
+                getEdge(pathNodes.get(i), pathNodes.get(i + 1)).setWeight(getEdge(pathNodes.get(i), pathNodes.get(i + 1)).getWeight() - reduceWeight);
+                //doing the same for the node
+                pathNodes.get(i).reduceEdge(pathNodes.get(i+1),reduceWeight);
+            }
+        }
+    }
 
     /**
      * Prints network details to specified output file
@@ -43,11 +59,13 @@ public class Network {
     }
 
     public void makeDAG(){}
+
     public void topoSort(){}
 
 
 
-    public void isolateEdges(){//possilby use later
+    public void isolateEdges(){
+        //possibly use later
          }
 
 

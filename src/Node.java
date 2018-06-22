@@ -10,10 +10,13 @@ public class Node {
         edges.add(newEdge);
     }
 
-    public void reduceEdge(){}
+    public void reduceEdge(Node toNode, int reduceWeight){
+        Edge toReduce = findEdge(toNode);
+        if(toReduce.getWeight() == reduceWeight) edges.remove(toReduce);
+        else toReduce.setWeight(toReduce.getWeight()-reduceWeight);
+    }
 
     public ArrayList<Edge> getEdges(){
-
         return edges;
     }
     public Edge findEdge(Node toNode){
