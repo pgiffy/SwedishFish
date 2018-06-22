@@ -10,12 +10,39 @@ public class Main {
         String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
         String importMode = "multiple";                                 //either single or multiple
 
+        ArrayList<Network> networks;
         if(importMode.equals("single")) {
-            readGraphFile(file);
+            PrintWriter out = null;
+            try {
+                out = new PrintWriter(new File("outputFile.txt"));
+                networks =readGraphFile(file);
+                for(Network network: networks) {
+                    out.println("**********************************");
+                    network.printDetails(out);
+                }
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not open output file.");
+                e.printStackTrace();
+            } finally {
+                out.close();
+            }
         }
 
         if(importMode.equals("multiple")) {
-            readGraphFiles(directory, animals);
+            PrintWriter out = null;
+            try {
+                out = new PrintWriter(new File("outputFile.txt"));
+                networks = readGraphFiles(directory, animals);
+                for(Network network: networks) {
+                    out.println("**********************************");
+                    network.printDetails(out);
+                }
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not open output file.");
+                e.printStackTrace();
+            } finally {
+                out.close();
+            }
         }
     }
 
@@ -24,37 +51,38 @@ public class Main {
      * @param graphs - each row contains a String representation of a graph
      * @return
      */
-    public static Network parseGraph(ArrayList<String> graphs) {
-        Network network = new Network();
-
+    public static ArrayList<Network> parseGraph(ArrayList<String> graphs) {
+        ArrayList<Network> networks = new ArrayList<>();
         for(String graph: graphs) {
+            Network network = new Network();
             String[] lines = graph.split("\n");
             int numNodes = Integer.parseInt(lines[0]);
-            System.out.println("***NEW GRAPH***");
+            //System.out.println("***NEW GRAPH***");
 
             for(int i = 0; i < numNodes; i++) {
-                //network.addNode();
+                network.addNode();
             }
-            System.out.println(numNodes + " nodes added!");
+            //System.out.println(numNodes + " nodes added!");
 
             for(int i = 1; i < lines.length; i++) {
                 String[] data = lines[i].split(" ");
-                int fromNode = Integer.parseInt(data[0]);
-                int toNode = Integer.parseInt(data[1]);
+                Node fromNode = network.getNode(Integer.parseInt(data[0]));
+                Node toNode = network.getNode(Integer.parseInt(data[1]));
                 int weight = (int) Double.parseDouble(data[2]);
-                //network.addEdge(fromNode, toNode, weight);
-                System.out.println("Edge: "+fromNode+" -> "+toNode+": "+weight);
+                network.addEdge(fromNode, toNode, weight);
+                //System.out.println("Edge: "+fromNode+" -> "+toNode+": "+weight);
             }
+            networks.add(network);
         }
 
-        return network;
+        return networks;
     }
 
     /**
      * Reads in all graph files for selected animal subfolders
      */
     public static ArrayList<Network> readGraphFiles(String directory, String[] animals) {
-        ArrayList<Network> graphs = new ArrayList<>();
+        ArrayList<Network> networks = new ArrayList<>();
 
         for(String animal: animals) {
             File dir = new File(directory+"/"+animal);
@@ -63,24 +91,24 @@ public class Main {
             for (File file : files) {
                 int pos = file.getName().lastIndexOf(".");
                 String ext = file.getName().substring(pos+1);
-                System.out.println(ext);
+                //System.out.println(ext);
                 if(!ext.equals("graph")) continue;
                 String filePath = file.getPath();
-                readGraphFile(filePath);
+                networks.addAll(readGraphFile(filePath));
             }
         }
 
-        return graphs;
+        return networks;
     }
 
     /**
-     * Parses a .graph file into individual graphs
+     * Parses a .graph file into individual networks
      * @param file - path to the file
-     * @return - ArrayList of Strings representing the nodes of a graph
+     * @return - list of networks after running on parseGraph()
      */
-    public static Network readGraphFile(String file) {
+    public static ArrayList<Network> readGraphFile(String file) {
         File inputFile = new File(file);
-        Network network = new Network();
+        ArrayList<Network> networks;
         ArrayList<String> graphs = new ArrayList<>();
         Scanner scan;
 
@@ -96,8 +124,8 @@ public class Main {
         }
 
         //System.out.println(graphs.toString());
-        parseGraph(graphs);
+        networks = parseGraph(graphs);
 
-        return network;
+        return networks;
     }
 }
