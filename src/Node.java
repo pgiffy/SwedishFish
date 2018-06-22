@@ -6,7 +6,9 @@ public class Node {
         id = nodeId;
     }
 
-    public void addEdge(){}
+    public void addEdge(Edge newEdge){
+        edges.add(newEdge);
+    }
 
     public void reduceEdge(){}
 
@@ -14,5 +16,14 @@ public class Node {
 
         return edges;
     }
+    public Edge findEdge(Node toNode){
+        for(int i = 0; i < edges.size(); i++){
+            if(edges.get(i).getToNode() == toNode){
+                return edges.get(i);
+            }
+        }
+        return null;
+    }
+
 
 }
