@@ -1,8 +1,8 @@
 import java.util.*;
 public class Node {
-    ArrayList<Edge> edges = new ArrayList<>();
-    ArrayList<Node> nodes = new ArrayList<>();//for the creation of a dag
-    int id;
+    private ArrayList<Edge> edges = new ArrayList<>();
+    private ArrayList<Node> nodes = new ArrayList<>();//for the creation of a dag
+    private int id;
     public Node(int nodeId){
         id = nodeId;
     }
@@ -21,6 +21,7 @@ public class Node {
 
     public ArrayList<Edge> getEdges(){ return edges; }
     public ArrayList<Node> getToNodes(){ return nodes; }
+    public int getId(){return id; }
 
     public Edge findEdge(Node toNode){
         for(int i = 0; i < edges.size(); i++){
