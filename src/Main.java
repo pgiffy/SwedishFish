@@ -4,11 +4,13 @@ import java.io.*;
 public class Main {
 
     public static void main(String args[]) {
+
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
         String importMode = "single";                                 //either single or multiple
+
 
         ArrayList<Network> networks;
         if(importMode.equals("single")) {
