@@ -1,9 +1,9 @@
 import java.io.PrintWriter;
 import java.util.*;
 public class Network {
-    int edgesRemoved = 0;
-    ArrayList<Edge> edges;
-    ArrayList<Node> nodes;
+    private int edgesRemoved = 0;
+    private ArrayList<Edge> edges;
+    private ArrayList<Node> nodes;
     //for tracking backedges
     public Network(){
         edges = new ArrayList<>();
@@ -86,7 +86,7 @@ public class Network {
         ArrayList<Node> children = nodes.get(i).getToNodes();
         //recursive check for children
         for (Node c: children){
-            if(removeBackEdgesUtil(c.id, visited,recursiveStack)){
+            if(removeBackEdgesUtil(c.getId(), visited,recursiveStack)){
                 reduceEdge(nodes.get(i), c);
                 return true;
             }
@@ -134,7 +134,7 @@ public class Network {
     private void topoSortVertex(int i, boolean[] visited, Stack stack) {
         visited[i] = true;
         for(Edge e: nodes.get(i).getEdges()) {
-            int j = e.toNode.id;
+            int j = e.getToNode().getId();
             if(visited[j] == false) {
                 topoSortVertex(j, visited, stack);
             }

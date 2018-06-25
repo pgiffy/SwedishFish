@@ -1,8 +1,8 @@
 import java.util.*;
 public class Path {
-    ArrayList<Node> nodes;
-    int weight;
-    int area;
+    private ArrayList<Node> nodes;
+    private int weight;
+    private int area;
     public Path(ArrayList<Node> newPath, int pathWeight){
         nodes = newPath;
         weight = pathWeight;
@@ -34,7 +34,7 @@ public class Path {
         str = "Weight = " + weight + " Area = " + area;
         str += "\n";
         for(Node node: nodes){
-            str += node.id + "->";
+            str += node.getId() + "->";
         }
 
         return str;
