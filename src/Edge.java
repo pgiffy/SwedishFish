@@ -11,8 +11,8 @@ public class Edge {
     public void setWeight(int newWeight){ weight = newWeight;}
 
     //these for possible future merging edges
-    /*public void setToNode(Node newToNode){toNode = newToNode;}
-    public void setFromNode(Node newFromNode){fromNode = newFromNode;}*/
+    public void setToNode(Node newToNode){toNode = newToNode;}
+    public void setFromNode(Node newFromNode){fromNode = newFromNode;}
 
     public int getWeight(){return weight;}
     public Node getToNode(){return toNode;}

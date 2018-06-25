@@ -71,6 +71,8 @@ public class Network {
     public Edge getEdge(Node fromNode, Node toNode){
         return fromNode.findEdge(toNode);
     }
+    public ArrayList getNodes(){ return nodes; }
+    public ArrayList getEdges(){ return edges; }
 
     //this adds visited nodes and nodes on stack to the list to check if back edges exist
     //also adds the next set of children to the stack
@@ -97,16 +99,16 @@ public class Network {
     }
 
 
-    public boolean removeBackEdges(){
+    public void removeBackEdges(){
         boolean[] visited = new boolean[nodes.size()];
         boolean[] recursiveStack = new boolean[nodes.size()];
 
         for(int i = 0; i < nodes.size(); i++){
             if(removeBackEdgesUtil(i, visited, recursiveStack)){
-                return true;
+                System.out.println("This is now a DAG");
             }
         }
-        return false;
+        System.out.println("This was already a DAG");
     }
 
 
@@ -147,6 +149,7 @@ public class Network {
 
     public void isolateEdges(){
         //possibly use later
+
          }
 
 

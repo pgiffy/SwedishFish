@@ -9,6 +9,8 @@ public class Main {
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
+        //String directory = "/home/peter/Desktop/instances/rnaseq";
+        //String file = "/home/peter/Desktop/instances/rnaseq/human/1.graph";
         String importMode = "single";                                 //either single or multiple
 
 
