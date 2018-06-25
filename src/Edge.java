@@ -16,6 +16,9 @@ public class Edge {
 
     public int getWeight(){return weight;}
     public Node getToNode(){return toNode;}
+    public Node getFromNode() {return fromNode;}
+    public void setToNode(Node newToNode) {toNode = newToNode;}
+    public void setFromNode(Node newFromNode) {fromNode = newFromNode;}
     //public Node getFromNode(){return fromNode;}
     public String toString(){return "Edge: " + fromNode.toString() + " -> " + toNode.toString() + " (Weight = " + weight+")";}
 

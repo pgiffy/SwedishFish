@@ -53,8 +53,11 @@ public class Network {
      * Prints network details to specified output file
      */
     public void printDetails(PrintWriter out) {
-        for(Edge edge: edges) {
-            out.println(edge.toString());
+        for(Node node: nodes) {
+            //out.print("Node " + node.getId()+": ");
+            for(Edge e: node.getIncomingEdges()) {
+                out.println(e.toString()+" ");
+            }
         }
     }
 
@@ -70,6 +73,39 @@ public class Network {
     }
     public Edge getEdge(Node fromNode, Node toNode){
         return fromNode.findEdge(toNode);
+    }
+
+    public void removeEdge(Edge e) {
+        int toNodeId = e.getToNode().getId();
+        int fromNodeId = e.getFromNode().getId();
+        for(int i = 0; i < edges.size()-1; i++) {
+            Edge edge = edges.get(i);
+            if(edge.getToNode().getId() == toNodeId && edge.getFromNode().getId() == fromNodeId) {
+                edges.remove(i);
+            }
+        }
+    }
+
+    public ArrayList<Node> getNodes() {
+        return nodes;
+    }
+
+    public ArrayList<Edge> getEdges() {
+        return edges;
+    }
+
+    public void removeNode(Node node) {
+        Node newToNode = node.getToNodes().get(0); //should only be 1
+        Node fromNode = node.getFromNodes().get(0); //should only be 1
+        System.out.println("newToNode = " + newToNode.getId());
+        for(Edge e: node.getOutgoingEdges()) {
+            e.setFromNode(fromNode);
+        }
+
+        Edge incomingEdge = node.getIncomingEdges().get(0); //should only be 1
+        System.out.println("incomingEdge = " + incomingEdge.toString());
+        incomingEdge.setToNode(newToNode);
+        System.out.println("incomingEdge2 = " + incomingEdge.toString());
     }
 
     //this adds visited nodes and nodes on stack to the list to check if back edges exist
@@ -145,9 +181,14 @@ public class Network {
 
 
 
-    public void isolateEdges(){
-        //possibly use later
-         }
+    public void collapseEdges() {
+        for(Node node: nodes) {
+            if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
+                System.out.println("REMOVE: " + node.getId());
+                removeNode(node);
+            }
+        }
+    }
 
 
 }
