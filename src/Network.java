@@ -1,8 +1,10 @@
 import java.io.PrintWriter;
 import java.util.*;
 public class Network {
+    int edgesRemoved = 0;
     ArrayList<Edge> edges;
     ArrayList<Node> nodes;
+    //for tracking backedges
     public Network(){
         edges = new ArrayList<>();
         nodes = new ArrayList<>();
@@ -16,6 +18,18 @@ public class Network {
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
     }
+
+    //for the use of removing back edges and maybe double isolated edges later
+    public void reduceEdge(Node fromNode, Node toNode){
+        Edge temp = getEdge(fromNode, toNode);
+        ArrayList<Node> tempRemove = new ArrayList<>();
+        tempRemove.add(fromNode);
+        tempRemove.add(toNode);
+        Path remove = new Path(tempRemove, temp.getWeight());
+        reducePath(remove);
+        System.out.println(temp.toString());
+    }
+
 
     public void reducePath(Path toReduce){
         ArrayList<Node> pathNodes = toReduce.getNodes();
@@ -58,7 +72,43 @@ public class Network {
         return fromNode.findEdge(toNode);
     }
 
-    public void makeDAG(){}
+    //this adds visited nodes and nodes on stack to the list to check if back edges exist
+    //also adds the next set of children to the stack
+    public boolean removeBackEdgesUtil(int i, boolean[] visited, boolean[] recursiveStack){
+        if (recursiveStack[i]) {
+            //if nodes is already in the recursive stack then it means there is a loop
+            return true;
+        }
+        if (visited[i])
+            return false;
+        visited[i] = true;
+        recursiveStack[i] = true;
+        ArrayList<Node> children = nodes.get(i).getToNodes();
+        //recursive check for children
+        for (Node c: children){
+            if(removeBackEdgesUtil(c.id, visited,recursiveStack)){
+                reduceEdge(nodes.get(i), c);
+                return true;
+            }
+        }
+        recursiveStack[i] = false;
+
+        return false;
+    }
+
+
+    public boolean removeBackEdges(){
+        boolean[] visited = new boolean[nodes.size()];
+        boolean[] recursiveStack = new boolean[nodes.size()];
+
+        for(int i = 0; i < nodes.size(); i++){
+            if(removeBackEdgesUtil(i, visited, recursiveStack)){
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public ArrayList<Integer> topoSort() {
         Stack stack = new Stack();
