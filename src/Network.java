@@ -96,6 +96,7 @@ public class Network {
         return false;
     }
 
+
     public boolean removeBackEdges(){
         boolean[] visited = new boolean[nodes.size()];
         boolean[] recursiveStack = new boolean[nodes.size()];
@@ -108,8 +109,38 @@ public class Network {
         return false;
     }
 
-    public void topoSort(){
 
+    public ArrayList<Integer> topoSort() {
+        Stack stack = new Stack();
+        boolean[] visited = new boolean[numNodes()];
+        for(int i = 0; i < visited.length; i++) {
+            visited[i] = false;
+        }
+
+        for(int i = 0; i < numNodes(); i++) {
+            if(visited[i] == false) {
+                topoSortVertex(i, visited, stack);
+            }
+        }
+
+        ArrayList<Integer> sortedList = new ArrayList<>();
+        while(!stack.empty()) {
+            sortedList.add((int) stack.pop());
+        }
+
+        return sortedList;
+    }
+
+    private void topoSortVertex(int i, boolean[] visited, Stack stack) {
+        visited[i] = true;
+        for(Edge e: nodes.get(i).getEdges()) {
+            int j = e.toNode.id;
+            if(visited[j] == false) {
+                topoSortVertex(j, visited, stack);
+            }
+        }
+
+        stack.push(i);
     }
 
 
