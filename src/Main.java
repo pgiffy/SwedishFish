@@ -2,7 +2,7 @@ import java.util.*;
 import java.io.*;
 
 public class Main {
-    
+
     public static void main(String args[]) {
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
@@ -127,5 +127,33 @@ public class Main {
         networks = parseGraph(graphs);
 
         return networks;
+    }
+
+    public static ArrayList<Path> findPath(Network network, ArrayList<Path> paths) {
+        int[] area = new int[network.numNodes()];
+        Edge[] edgesUsed = new Edge[network.numNodes()];
+        for(int i = 0; i < area.length; i++) {
+            area[i] = -1;
+        }
+        area[0] = 0; //source area = 0
+        int pathLength = 1;
+
+        for(int u_id: network.topoSort()) {
+            Node u = network.getNode(u_id);
+            for(Edge e: u.getEdges()) {
+                int v_id = e.toNode.id;
+                int newArea = area[u_id] + e.weight*pathLength;
+                if(newArea > area[v_id]) {
+                    area[v_id] = newArea;
+                    edgesUsed[v_id] = e;
+                }
+            }
+            pathLength++;
+        }
+
+        Path path = new Path();
+        for(Edge e: edgesUsed) {
+            network.reducePath();
+        }
     }
 }
