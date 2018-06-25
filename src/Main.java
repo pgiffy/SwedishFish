@@ -3,6 +3,7 @@ import java.io.*;
 
 public class Main {
 
+    /*
     public static void main(String args[]) {
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
@@ -44,6 +45,22 @@ public class Main {
                 out.close();
             }
         }
+    }
+    */
+    public static void main(String[] args) {
+        Network network = new Network();
+        for(int i = 0; i < 6; i++) {
+            network.addNode();
+        }
+
+        network.addEdge(network.getNode(5),network.getNode(2), 1);
+        network.addEdge(network.getNode(5),network.getNode(0), 1);
+        network.addEdge(network.getNode(4),network.getNode(0), 1);
+        network.addEdge(network.getNode(4),network.getNode(1), 1);
+        network.addEdge(network.getNode(2),network.getNode(3), 1);
+        network.addEdge(network.getNode(3),network.getNode(1), 1);
+
+        network.topoSort();
     }
 
     /**
