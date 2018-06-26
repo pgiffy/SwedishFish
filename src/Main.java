@@ -2,16 +2,17 @@ import java.util.*;
 import java.io.*;
 
 public class Main {
-    
+
     public static void main(String args[]) {
 
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
-        String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
+        //String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
         //String directory = "/home/peter/Desktop/instances/rnaseq";
-        //String file = "/home/peter/Desktop/instances/rnaseq/human/1.graph";
-        String importMode = "single";                                 //either single or multiple
+        String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
+        String importMode = "single";                                   //either single or multiple
+
 
 
         ArrayList<Network> networks;
@@ -23,6 +24,9 @@ public class Main {
                 for(Network network: networks) {
                     out.println("**********************************");
                     network.printDetails(out);
+                    ArrayList<Path> paths = new ArrayList<>();
+                    paths = findPaths(network, paths, out);
+                    System.out.println(paths.toString());
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
@@ -131,5 +135,43 @@ public class Main {
         networks = parseGraph(graphs);
 
         return networks;
+    }
+
+    public static ArrayList<Path> findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
+
+        while(!network.getEdges().isEmpty()) {
+            int[] area = new int[network.numNodes()];
+            Node[] nodes = new Node[network.numNodes()];
+            for (int i = 0; i < area.length; i++) {
+                area[i] = -1;
+                nodes[i] = null;
+            }
+            area[0] = 0; //source area = 0
+            nodes[0] = network.getNode(0);
+            int pathLength = 1;
+            int minWeight = -1;
+
+            for (int u_id : network.topoSort()) {
+                Node u = network.getNode(u_id);
+                for (Edge e : u.getEdges()) {
+                    int v_id = e.getToNode().getId();
+                    int newArea = area[u_id] + e.getWeight() * pathLength;
+                    if (newArea > area[v_id]) {
+                        area[v_id] = newArea;
+                        nodes[v_id] = network.getNode(v_id);
+                        if (e.getWeight() < minWeight || minWeight < 0) minWeight = e.getWeight();
+                    }
+                }
+                pathLength++;
+            }
+
+            Path path = new Path(nodes, minWeight);
+            paths.add(path);
+            System.out.println(path.print());
+            network.reducePath(path);
+            network.printDetails(out);
+        }
+
+        return paths;
     }
 }

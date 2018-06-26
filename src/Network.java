@@ -89,6 +89,7 @@ public class Network {
         //recursive check for children
         for (Node c: children){
             if(removeBackEdgesUtil(c.getId(), visited,recursiveStack)){
+
                 reduceEdge(nodes.get(i), c);
                 return true;
             }

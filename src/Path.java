@@ -9,6 +9,13 @@ public class Path {
         area = nodes.size()*weight;
     }
 
+    public Path(Node[] newPath, int pathWeight) {
+        nodes = new ArrayList<>();
+        for(Node node: newPath) nodes.add(node);
+        weight = pathWeight;
+        area = nodes.size()*weight;
+    }
+
     public int pathLength(){ return nodes.size();}
 
     public void setWeight(int newWeight) {
@@ -21,10 +28,15 @@ public class Path {
     public int getArea(){ return area; }
     public int getWeight(){ return weight; }
 
-    public void print(){
-        System.out.println("Weight = " + weight + " Area = " + area);
-        for(int i = 0; i < nodes.size(); i++){
-            System.out.print(nodes.get(i).getId() + " ");
+    public String print(){
+        System.out.println(nodes.toString());
+        String str;
+        str = "Weight = " + weight + " Area = " + area;
+        str += "\n";
+        for(Node node: nodes){
+            str += node.getId() + "->";
         }
+
+        return str;
     }
 }
