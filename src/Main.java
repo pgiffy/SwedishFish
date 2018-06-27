@@ -24,9 +24,12 @@ public class Main {
                 for(Network network: networks) {
                     out.println("**********************************");
                     network.printDetails(out);
-                    ArrayList<Path> paths = new ArrayList<>();
-                    paths = findPaths(network, paths, out);
-                    System.out.println(paths.toString());
+                    //ArrayList<Path> paths = new ArrayList<>();
+                    //paths = findPaths(network, paths, out);
+                    //System.out.println(paths.toString());
+                    out.println("**********************************");
+                    network.collapseEdges();
+                    network.printDetails(out);
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
@@ -139,7 +142,9 @@ public class Main {
 
     public static ArrayList<Path> findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
-        while(!network.getEdges().isEmpty()) {
+
+        //while(!network.getEdges().isEmpty()) {
+
             int[] area = new int[network.numNodes()];
             Node[] nodes = new Node[network.numNodes()];
             for (int i = 0; i < area.length; i++) {
@@ -151,6 +156,8 @@ public class Main {
             int pathLength = 1;
             int minWeight = -1;
 
+            System.out.println(network.topoSort().toString());
+
             for (int u_id : network.topoSort()) {
                 Node u = network.getNode(u_id);
                 for (Edge e : u.getEdges()) {
@@ -159,18 +166,22 @@ public class Main {
                     if (newArea > area[v_id]) {
                         area[v_id] = newArea;
                         nodes[v_id] = network.getNode(v_id);
+
+                        System.out.println("NEW AREA: " + newArea + " | " + u_id + " | " + v_id);
+
                         if (e.getWeight() < minWeight || minWeight < 0) minWeight = e.getWeight();
                     }
                 }
                 pathLength++;
             }
 
+            System.out.println("areas: "+Arrays.toString(area));
             Path path = new Path(nodes, minWeight);
             paths.add(path);
             System.out.println(path.print());
             network.reducePath(path);
             network.printDetails(out);
-        }
+        //}
 
         return paths;
     }
