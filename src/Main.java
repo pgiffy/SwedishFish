@@ -7,9 +7,9 @@ public class Main {
 
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
-        String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
+        //String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         //String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
-        //String directory = "/home/peter/Desktop/instances/rnaseq";
+        String directory = "/home/peter/Desktop/instances/rnaseq";
         String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String importMode = "single";                                   //either single or multiple
 
@@ -143,37 +143,6 @@ public class Main {
 
     public static ArrayList<Path> findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
-<<<<<<< HEAD
-
-        //while(!network.getEdges().isEmpty()) {
-
-            int[] area = new int[network.numNodes()];
-            Node[] nodes = new Node[network.numNodes()];
-            for (int i = 0; i < area.length; i++) {
-                area[i] = -1;
-                nodes[i] = null;
-            }
-            area[0] = 0; //source area = 0
-            nodes[0] = network.getNode(0);
-            int pathLength = 1;
-            int minWeight = -1;
-
-            System.out.println(network.topoSort().toString());
-
-            for (int u_id : network.topoSort()) {
-                Node u = network.getNode(u_id);
-                for (Edge e : u.getEdges()) {
-                    int v_id = e.getToNode().getId();
-                    int newArea = area[u_id] + e.getWeight() * pathLength;
-                    if (newArea > area[v_id]) {
-                        area[v_id] = newArea;
-                        nodes[v_id] = network.getNode(v_id);
-
-                        System.out.println("NEW AREA: " + newArea + " | " + u_id + " | " + v_id);
-
-                        if (e.getWeight() < minWeight || minWeight < 0) minWeight = e.getWeight();
-                    }
-=======
         int[] area = new int[network.numNodes()];
         int[] nodes = new int[network.numNodes()];
         int pathLength = 1;
@@ -190,7 +159,6 @@ public class Main {
                 if(nodeArea + area[nodeId] > area[outgoingId]) {
                     area[outgoingId] = nodeArea;
                     nodes[nodeId] = outgoingId;
->>>>>>> 30910e2c0a275d630cc0471748671889b5d8230e
                 }
             }
             pathLength++;
