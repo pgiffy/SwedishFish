@@ -9,6 +9,7 @@ public class Main {
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
+        String truthFile = "/home/dan/dev/instances/rnaseq/human/1.truth"; //only used in single read mode
         //String directory = "/home/peter/Desktop/instances/rnaseq";
         //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String importMode = "single";                                   //either single or multiple
@@ -18,23 +19,30 @@ public class Main {
         ArrayList<Network> networks;
         if(importMode.equals("single")) {
             PrintWriter out = null;
+            int numSuccess = 0;
+            int numFail = 0;
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
                 networks = readGraphFile(file);
-                System.out.println("test");
+                ArrayList<Integer> numTruthPaths = readTruthFile(truthFile);
+                System.out.println(numTruthPaths.toString());
+                int count = 0;
                 for(Network network: networks) {
-                    System.out.println(".");
-                    out.println("**********************************");
-                    network.printDetails(out);
+                    out.println("Graph # " + count);
                     ArrayList<Path> paths = new ArrayList<>();
-                    //paths = findPaths(network, paths, out);
-                    //System.out.println(paths.toString());
-                    out.println("**********************************");
-                    network.collapseEdges();
-                    System.out.println("test2");
-                    network.printDetails(out);
-                    findPaths(network, paths, out);
-                    System.out.println("test3");
+                    //network.collapseEdges();
+                    //network.printDetails(out);
+                    int numPaths = findPaths(network, paths, out);
+                    out.println("# Truth Paths = " + numTruthPaths.get(count) + "\t # Actual Paths = " + numPaths);
+                    if(numPaths <= numTruthPaths.get(count)) {
+                        out.println("SUCCESS");
+                        numSuccess++;
+                    } else {
+                        out.println("FAIL");
+                        numFail++;
+                    }
+                    out.println();
+                    count++;
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
@@ -42,6 +50,9 @@ public class Main {
             } finally {
                 out.close();
             }
+
+            double successPercent = ((double)numSuccess / (numSuccess+numFail) * 100);
+            System.out.println("Success: " + numSuccess + " ("+successPercent+"%) \t Fail: " + numFail);
         }
 
         if(importMode.equals("multiple")) {
@@ -94,6 +105,26 @@ public class Main {
         return networks;
     }
 
+    public static ArrayList<Integer> readTruthFile(String file) {
+        File inputFile = new File(file);
+        ArrayList<Integer> numTruthPaths = new ArrayList<>();
+        Scanner scan;
+
+        try {
+            scan = new Scanner(inputFile);
+            scan.useDelimiter("#[\\s\\S]+?[\\n]"); //splits into graphs by # XXX
+            while(scan.hasNext()) {
+                String[] lines = scan.next().split("\n");
+                numTruthPaths.add(lines.length);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Could not open file: " + inputFile.toString());
+            e.printStackTrace();
+        }
+
+        return numTruthPaths;
+    }
+
     /**
      * Reads in all graph files for selected animal subfolders
      */
@@ -140,13 +171,13 @@ public class Main {
         }
 
         //System.out.println(graphs.toString());
-        System.out.print(".");
+        //System.out.print(".");
         networks = parseGraph(graphs);
 
         return networks;
     }
 
-    public static ArrayList<Path> findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
+    public static int findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
         while(network.numEdges() > 0) {
             int[] area = new int[network.numNodes()];
@@ -171,25 +202,20 @@ public class Main {
                 pathLength++;
             }
 
-            Network failed = new Network();
-            try {
-                Path path = new Path(selectedEdges);
-                paths.add(path);
-                network.reducePath(path);
-            } catch (NullPointerException e) {
-                System.out.println("NULL POINTER EXCEPTION");
-                System.out.println(network.toString());
-                return null;
-                //failed = network;
-                //break;
-            } finally {
-                //System.out.println("FAILED: " + failed.toString());
+            ArrayList<Edge> selectedEdges2 = new ArrayList<>();
+            for(Edge e: selectedEdges) {
+                if(e != null) selectedEdges2.add(e);
             }
+
+            Path path = new Path(selectedEdges2);
+            paths.add(path);
+            network.reducePath(path);
+            //System.out.println(network.toString());
         }
 
         //System.out.println(Arrays.toString(area));
         //System.out.println(Arrays.toString(selectedEdges));
 
-        return paths;
+        return paths.size();
     }
 }

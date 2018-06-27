@@ -4,7 +4,7 @@ public class Path {
     private int weight;
     private int area;
 
-    public Path(Edge[] newEdges) {
+    public Path(ArrayList<Edge> newEdges) {
         edges = new ArrayList<>();
         int minWeight = -1;
         for(Edge e: newEdges) {
