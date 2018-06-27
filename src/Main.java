@@ -8,7 +8,7 @@ public class Main {
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
-        String file = "/home/dan/dev/instances/rnaseq/human/test.graph";   //only used in single read mode
+        String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
         //String directory = "/home/peter/Desktop/instances/rnaseq";
         //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String importMode = "single";                                   //either single or multiple
@@ -20,8 +20,10 @@ public class Main {
             PrintWriter out = null;
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
-                networks =readGraphFile(file);
+                networks = readGraphFile(file);
+                System.out.println("test");
                 for(Network network: networks) {
+                    System.out.println(".");
                     out.println("**********************************");
                     network.printDetails(out);
                     ArrayList<Path> paths = new ArrayList<>();
@@ -29,8 +31,10 @@ public class Main {
                     //System.out.println(paths.toString());
                     out.println("**********************************");
                     network.collapseEdges();
+                    System.out.println("test2");
                     network.printDetails(out);
                     findPaths(network, paths, out);
+                    System.out.println("test3");
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
@@ -136,6 +140,7 @@ public class Main {
         }
 
         //System.out.println(graphs.toString());
+        System.out.print(".");
         networks = parseGraph(graphs);
 
         return networks;
@@ -143,35 +148,44 @@ public class Main {
 
     public static ArrayList<Path> findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
-        int[] area = new int[network.numNodes()];
-        Edge[] selectedEdges = new Edge[network.numNodes()-1];
-        int pathLength = 1;
+        while(network.numEdges() > 0) {
+            int[] area = new int[network.numNodes()];
+            Edge[] selectedEdges = new Edge[network.numNodes() - 1];
+            int pathLength = 1;
 
-        for(int i = 0; i < area.length; i++) area[i] = -1;
-        for(int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
-        area[0] = 0;
+            for (int i = 0; i < area.length; i++) area[i] = -1;
+            for (int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
+            area[0] = 0;
 
-        for(int nodeId: network.topoSort()) {
-            Node n = network.getNode(nodeId);
-            for(Edge e: n.getOutgoingEdges()) {
-                int outgoingId = e.getToNode().getId();
-                int weight = e.getWeight();
-                int nodeArea = weight * pathLength;
-                if(nodeArea + area[nodeId] > area[outgoingId]) {
-                    area[outgoingId] = nodeArea + area[nodeId];
-                    selectedEdges[nodeId] = e;
+            for (int nodeId : network.topoSort()) {
+                Node n = network.getNode(nodeId);
+                for (Edge e : n.getOutgoingEdges()) {
+                    int outgoingId = e.getToNode().getId();
+                    int weight = e.getWeight();
+                    int nodeArea = weight * pathLength;
+                    if (nodeArea + area[nodeId] > area[outgoingId]) {
+                        area[outgoingId] = nodeArea + area[nodeId];
+                        selectedEdges[nodeId] = e;
+                    }
                 }
+                pathLength++;
             }
-            pathLength++;
-        }
 
-        System.out.println(Arrays.toString(selectedEdges));
-        Path path = new Path(selectedEdges);
-        paths.add(path);
-        System.out.println(path.toString());
-        network.reducePath(path);
-        out.println("***** RESULTS *****");
-        network.printDetails(out);
+            Network failed = new Network();
+            try {
+                Path path = new Path(selectedEdges);
+                paths.add(path);
+                network.reducePath(path);
+            } catch (NullPointerException e) {
+                System.out.println("NULL POINTER EXCEPTION");
+                System.out.println(network.toString());
+                return null;
+                //failed = network;
+                //break;
+            } finally {
+                //System.out.println("FAILED: " + failed.toString());
+            }
+        }
 
         //System.out.println(Arrays.toString(area));
         //System.out.println(Arrays.toString(selectedEdges));

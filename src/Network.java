@@ -49,6 +49,15 @@ public class Network {
         }
     }
 
+    public String toString() {
+        String str = "Network: " + numEdges() + " edges, " + numNodes() + " nodes\n";
+        for(Edge e: edges) {
+            str += e.toString()+" ";
+        }
+
+        return str;
+    }
+
     public int numNodes(){
         return nodes.size();
     }
