@@ -139,6 +139,21 @@ public class Network {
             }
         }
 
+        //remove & renumber nodes
+        int i = 0;
+        ArrayList<Node> tempNodes = new ArrayList<>();
+        tempNodes.addAll(nodes);
+        for(Node n: nodes) {
+            if(n.numOutgoingEdges() == 0 && n.numIncomingEdges() == 0) {
+                tempNodes.remove(n);
+            } else {
+                n.setId(i);
+                i++;
+            }
+        }
+        nodes = tempNodes;
+
+
     }
 
     private void findMatchingEdges(ArrayList<Edge> removedEdges) {

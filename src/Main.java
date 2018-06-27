@@ -7,10 +7,10 @@ public class Main {
 
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
-        //String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
-        //String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
-        String directory = "/home/peter/Desktop/instances/rnaseq";
-        String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
+        String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
+        String file = "/home/dan/dev/instances/rnaseq/human/test.graph";   //only used in single read mode
+        //String directory = "/home/peter/Desktop/instances/rnaseq";
+        //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String importMode = "single";                                   //either single or multiple
 
 
