@@ -1,42 +1,38 @@
 import java.util.*;
 public class Path {
-    private ArrayList<Node> nodes;
+    private ArrayList<Edge> edges;
     private int weight;
     private int area;
-    public Path(ArrayList<Node> newPath, int pathWeight){
-        nodes = newPath;
-        weight = pathWeight;
-        area = nodes.size()*weight;
-    }
 
-    public Path(Node[] newPath, int pathWeight) {
-        nodes = new ArrayList<>();
-        for(Node node: newPath) nodes.add(node);
-        weight = pathWeight;
-        area = nodes.size()*weight;
-    }
-
-    public int pathLength(){ return nodes.size();}
-
-    public void setWeight(int newWeight) {
-        weight = newWeight;
-        area = nodes.size() * weight;
-    }
-
-    public ArrayList<Node> getNodes(){ return nodes;}
-
-    public int getArea(){ return area; }
-    public int getWeight(){ return weight; }
-
-    public String print(){
-        System.out.println(nodes.toString());
-        String str;
-        str = "Weight = " + weight + " Area = " + area;
-        str += "\n";
-        for(Node node: nodes){
-            str += node.getId() + "->";
+    public Path(Edge[] newEdges) {
+        edges = new ArrayList<>();
+        int minWeight = -1;
+        for(Edge e: newEdges) {
+            edges.add(e);
+            if(e.getWeight() < minWeight || minWeight < 0) {
+                minWeight = e.getWeight();
+            }
         }
 
+        weight = minWeight;
+        area = weight * edges.size();
+    }
+
+    public ArrayList<Edge> getEdges() {
+        return edges;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public String toString() {
+        String str = "[PATH weight="+weight+" area="+area+" ";
+        for(Edge e: edges) {
+            str += e.toString()+" ";
+        }
+        str += "]";
         return str;
     }
+
 }

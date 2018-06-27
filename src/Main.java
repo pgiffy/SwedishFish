@@ -141,11 +141,12 @@ public class Main {
     public static ArrayList<Path> findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
         int[] area = new int[network.numNodes()];
-        int[] nodes = new int[network.numNodes()];
+        Edge[] selectedEdges = new Edge[network.numNodes()-1];
         int pathLength = 1;
 
         for(int i = 0; i < area.length; i++) area[i] = -1;
-        for(int i = 0; i < nodes.length; i++) nodes[i] = -1;
+        for(int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
+        area[0] = 0;
 
         for(int nodeId: network.topoSort()) {
             Node n = network.getNode(nodeId);
@@ -154,15 +155,23 @@ public class Main {
                 int weight = e.getWeight();
                 int nodeArea = weight * pathLength;
                 if(nodeArea + area[nodeId] > area[outgoingId]) {
-                    area[outgoingId] = nodeArea;
-                    nodes[nodeId] = outgoingId;
+                    area[outgoingId] = nodeArea + area[nodeId];
+                    selectedEdges[nodeId] = e;
                 }
             }
             pathLength++;
         }
 
-        System.out.println(Arrays.toString(area));
-        System.out.println(Arrays.toString(nodes));
+        System.out.println(Arrays.toString(selectedEdges));
+        Path path = new Path(selectedEdges);
+        paths.add(path);
+        System.out.println(path.toString());
+        network.reducePath(path);
+        out.println("***** RESULTS *****");
+        network.printDetails(out);
+
+        //System.out.println(Arrays.toString(area));
+        //System.out.println(Arrays.toString(selectedEdges));
 
         return paths;
     }
