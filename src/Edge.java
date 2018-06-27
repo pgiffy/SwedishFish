@@ -8,16 +8,8 @@ public class Edge {
         weight = edgeWeight;
         toNode = ToNode;
         fromNode = FromNode;
-        count = 1;
     }
 
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int newCount) {
-        count = newCount;
-    }
 
     public void incrementCount() {
         count++;

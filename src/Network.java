@@ -14,11 +14,11 @@ public class Network {
         nodes.add(new Node(nodes.size()));
     }
 
-    public Edge addEdge(Node fromNode, Node toNode, int weight){
+    public void addEdge(Node fromNode, Node toNode, int weight){
         Edge newEdge = new Edge(fromNode, toNode, weight);
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
-        return newEdge;
+        toNode.addIncomingEdge(newEdge);
     }
 
     public void reducePath(Path toReduce) {
@@ -65,50 +65,31 @@ public class Network {
         return fromNode.findOutgoingEdge(toNode);
     }
 
-    public Edge getEdge(Node fromNode, Node toNode, int weight){
-        return fromNode.findOutgoingEdge(toNode, weight);
-    }
+    public ArrayList getNodes(){ return nodes; }
+    public ArrayList getEdges(){ return edges; }
 
     public void removeEdge(Edge e) {
-        //int toNodeId = e.getToNode().getId();
-        //int fromNodeId = e.getFromNode().getId();
-
         //remove from network edges list
         edges.remove(e);
 
         //remove from outgoing edge list (in node)
-        e.getFromNode().getOutgoingEdges().remove(e);
+        e.getFromNode().removeOutgoingEdge(e);
 
         //remove from incoming edge list (in node)
-        e.getToNode().getIncomingEdges().remove(e);
+        e.getToNode().removeIncomingEdge(e);
     }
 
-    public ArrayList<Node> getNodes() {
-        return nodes;
-    }
-
-    public ArrayList<Edge> getEdges() {
-        return edges;
-    }
 
     public void removeNode(Node node) {
-        Edge incomingEdge = node.getIncomingEdges().get(0);
-        Edge outgoingEdge = node.getOutgoingEdges().get(0);
-        Node fromNode = incomingEdge.getFromNode();
-        Node toNode = outgoingEdge.getToNode();
-        int weight = incomingEdge.getWeight();
-
-        //re-route edges around removed node
-        Edge oldIncomingEdge = getEdge(fromNode, node);
-        oldIncomingEdge.setToNode(toNode);
-        //oldIncomingEdge.incrementCount();
-        Edge oldOutgoingEdge = getEdge(node, toNode);
-        oldOutgoingEdge.setFromNode(fromNode);
-        oldOutgoingEdge.incrementCount();
-
-        //delete incoming/outgoing edges from removed node
-        node.getIncomingEdges().remove(incomingEdge);
-        node.getOutgoingEdges().remove(outgoingEdge);
+        Node fromNode = node.getFromNodes().get(0);
+        Node toNode = node.getToNodes().get(0);
+        Edge outGoing = getEdge(node, toNode);
+        Edge inComing = getEdge(fromNode, node);
+        Edge newEdge = new Edge(fromNode, toNode, inComing.getWeight());
+        addEdge(fromNode, toNode, inComing.getWeight());
+        removeEdge(outGoing);
+        removeEdge(inComing);
+         
 
         System.out.println("UPDATED: " + node.printEdges());
         System.out.println("fromNode = " + fromNode.printEdges());
@@ -150,62 +131,13 @@ public class Network {
         stack.push(i);
     }
 
-
-
     public void collapseEdges() {
         ArrayList<Node> toRemove = new ArrayList<>();
         for(Node node: nodes) {
             if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
-                toRemove.add(node);
-                //removeNode(node);
+                removeNode(node);
             }
         }
-
-        for(Node n: toRemove) {
-            removeNode(n);
-        }
-
-        //remove edges that should have been removed before
-        ArrayList<Edge> edgesTemp = new ArrayList<>();
-        ArrayList<Edge> removedEdges = new ArrayList<>();
-        edgesTemp.addAll(edges);
-        for(Edge e: edges) {
-            Node toNode = e.getToNode();
-            Node fromNode = e.getFromNode();
-            if(toRemove.contains(toNode) || toRemove.contains(fromNode)) {
-                edgesTemp.remove(e);
-                removedEdges.add(e);
-            }
-        }
-
-        edges = edgesTemp;
-
-        //remove duplicate edges
-        ArrayList<Edge> foundEdges = new ArrayList<>();
-        for(Edge e: edges) {
-            if(!edgeIsFound(foundEdges, e)) {
-                foundEdges.add(e);
-            }
-
-        }
-
-        edges = foundEdges;
-
-        findMatchingEdges(removedEdges);
-
-        //remove & renumber nodes
-        int i = 0;
-        ArrayList<Node> tempNodes = new ArrayList<>();
-        tempNodes.addAll(nodes);
-        for(Node n: nodes) {
-            if(n.numOutgoingEdges() == 0 && n.numIncomingEdges() == 0) {
-                tempNodes.remove(n);
-            } else {
-                n.setId(i);
-                i++;
-            }
-        }
-        nodes = tempNodes;
 
     }
 

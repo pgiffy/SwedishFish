@@ -4,7 +4,6 @@ public class Node {
 
     private ArrayList<Edge> outgoingEdges = new ArrayList<>();
     private ArrayList<Edge> incomingEdges = new ArrayList<>();
-    private ArrayList<Node> nodes = new ArrayList<>();//for the creation of a dag
     private int id;
 
     public Node(int nodeId){
@@ -13,8 +12,6 @@ public class Node {
 
     public void addEdge(Edge newEdge){
         outgoingEdges.add(newEdge);
-        nodes.add(newEdge.getToNode());
-        newEdge.getToNode().addIncomingEdge(newEdge);
     }
 
     public void addIncomingEdge(Edge newEdge) {
@@ -31,29 +28,32 @@ public class Node {
     public ArrayList<Edge> getIncomingEdges() {return incomingEdges;}
     public ArrayList<Edge> getOutgoingEdges() {return outgoingEdges;}
 
-    public int numIncomingEdges() {
-        return incomingEdges.size();
-    }
+    public void removeIncomingEdge(Edge e) { incomingEdges.remove(e); }
+    public void removeOutgoingEdge(Edge e) { outgoingEdges.remove(e); }
 
-    public int numOutgoingEdges() {
-        return outgoingEdges.size();
-    }
+    public int numIncomingEdges() { return incomingEdges.size(); }
 
-    public ArrayList<Node> getToNodes(){ return nodes; }
+    public int numOutgoingEdges() { return outgoingEdges.size(); }
+
+    public ArrayList<Node> getToNodes(){
+        ArrayList<Node> toNodes = new ArrayList<>();
+        for(Edge e: outgoingEdges) {
+            toNodes.add(e.getToNode());
+        }
+        return toNodes;
+    }
 
     public ArrayList<Node> getFromNodes() {
         ArrayList<Node> fromNodes = new ArrayList<>();
         for(Edge e: incomingEdges) {
             fromNodes.add(e.getFromNode());
         }
-
         return fromNodes;
     }
 
     public int getId(){ return id; }
-    public void setId(int newId) {
-        id = newId;
-    }
+
+    public void setId(int newId) { id = newId; }
 
     public Edge findOutgoingEdge(Node toNode){
         for(int i = 0; i < outgoingEdges.size(); i++){
@@ -64,23 +64,6 @@ public class Node {
         return null;
     }
 
-    public Edge findOutgoingEdge(Node toNode, int weight){
-        for(int i = 0; i < outgoingEdges.size(); i++){
-            if(outgoingEdges.get(i).getToNode() == toNode && outgoingEdges.get(i).getWeight() == weight){
-                return outgoingEdges.get(i);
-            }
-        }
-        return null;
-    }
-
-    public Edge findIncomingEdge(Node fromNode) {
-        for(int i = 0; i < incomingEdges.size(); i++){
-            if(incomingEdges.get(i).getToNode() == fromNode){
-                return incomingEdges.get(i);
-            }
-        }
-        return null;
-    }
 
     public String toString() {
         return "<"+id+">";
