@@ -13,14 +13,15 @@ public class Network {
     public void addNode(){
         nodes.add(new Node(nodes.size()));
     }
-    public void addEdge(Node fromNode, Node toNode, int weight){
+    public Edge addEdge(Node fromNode, Node toNode, int weight){
         Edge newEdge = new Edge(fromNode, toNode, weight);
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
+        return newEdge;
     }
 
     //for the use of removing back edges and maybe double isolated edges later
-    public void reduceEdge(Node fromNode, Node toNode){
+    public void reduceEdge(Node fromNode, Node toNode) {
         Edge temp = getEdge(fromNode, toNode);
         ArrayList<Node> tempRemove = new ArrayList<>();
         tempRemove.add(fromNode);
@@ -31,7 +32,7 @@ public class Network {
     }
 
 
-    public void reducePath(Path toReduce){
+    public void reducePath(Path toReduce) {
         ArrayList<Node> pathNodes = toReduce.getNodes();
         int reduceWeight = toReduce.getWeight();
         for(int i = 0; i < pathNodes.size()-1; i++){
@@ -53,17 +54,20 @@ public class Network {
      * Prints network details to specified output file
      */
     public void printDetails(PrintWriter out) {
-        for(Node node: nodes) {
-            //out.print("Node " + node.getId()+": ");
-            for(Edge e: node.getIncomingEdges()) {
-                out.println(e.toString()+" ");
-            }
+
+        for(Node n: nodes) {
+            out.println(n.printEdges()+" ");
+        }
+        out.println("*******");
+        for(Edge e: edges) {
+            out.println(e.toString());
         }
     }
 
     public int numNodes(){
         return nodes.size();
     }
+
     public int numEdges(){
         return edges.size();
     }
@@ -71,19 +75,27 @@ public class Network {
     public Node getNode(int id){
         return nodes.get(id);
     }
+
     public Edge getEdge(Node fromNode, Node toNode){
-        return fromNode.findEdge(toNode);
+        return fromNode.findOutgoingEdge(toNode);
+    }
+
+    public Edge getEdge(Node fromNode, Node toNode, int weight){
+        return fromNode.findOutgoingEdge(toNode, weight);
     }
 
     public void removeEdge(Edge e) {
-        int toNodeId = e.getToNode().getId();
-        int fromNodeId = e.getFromNode().getId();
-        for(int i = 0; i < edges.size()-1; i++) {
-            Edge edge = edges.get(i);
-            if(edge.getToNode().getId() == toNodeId && edge.getFromNode().getId() == fromNodeId) {
-                edges.remove(i);
-            }
-        }
+        //int toNodeId = e.getToNode().getId();
+        //int fromNodeId = e.getFromNode().getId();
+
+        //remove from network edges list
+        edges.remove(e);
+
+        //remove from outgoing edge list (in node)
+        e.getFromNode().getOutgoingEdges().remove(e);
+
+        //remove from incoming edge list (in node)
+        e.getToNode().getIncomingEdges().remove(e);
     }
 
     public ArrayList<Node> getNodes() {
@@ -95,17 +107,28 @@ public class Network {
     }
 
     public void removeNode(Node node) {
-        Node newToNode = node.getToNodes().get(0); //should only be 1
-        Node fromNode = node.getFromNodes().get(0); //should only be 1
-        System.out.println("newToNode = " + newToNode.getId());
-        for(Edge e: node.getOutgoingEdges()) {
-            e.setFromNode(fromNode);
-        }
+        Edge incomingEdge = node.getIncomingEdges().get(0);
+        Edge outgoingEdge = node.getOutgoingEdges().get(0);
+        Node fromNode = incomingEdge.getFromNode();
+        Node toNode = outgoingEdge.getToNode();
+        int weight = incomingEdge.getWeight();
 
-        Edge incomingEdge = node.getIncomingEdges().get(0); //should only be 1
-        System.out.println("incomingEdge = " + incomingEdge.toString());
-        incomingEdge.setToNode(newToNode);
-        System.out.println("incomingEdge2 = " + incomingEdge.toString());
+        //re-route edges around removed node
+        Edge oldIncomingEdge = getEdge(fromNode, node);
+        oldIncomingEdge.setToNode(toNode);
+        //oldIncomingEdge.incrementCount();
+        Edge oldOutgoingEdge = getEdge(node, toNode);
+        oldOutgoingEdge.setFromNode(fromNode);
+        oldOutgoingEdge.incrementCount();
+
+        //delete incoming/outgoing edges from removed node
+        node.getIncomingEdges().remove(incomingEdge);
+        node.getOutgoingEdges().remove(outgoingEdge);
+
+        System.out.println("UPDATED: " + node.printEdges());
+        System.out.println("fromNode = " + fromNode.printEdges());
+        System.out.println("toNode = " + toNode.printEdges());
+
     }
 
     //this adds visited nodes and nodes on stack to the list to check if back edges exist
@@ -169,7 +192,7 @@ public class Network {
 
     private void topoSortVertex(int i, boolean[] visited, Stack stack) {
         visited[i] = true;
-        for(Edge e: nodes.get(i).getEdges()) {
+        for(Edge e: nodes.get(i).getOutgoingEdges()) {
             int j = e.getToNode().getId();
             if(visited[j] == false) {
                 topoSortVertex(j, visited, stack);
@@ -182,12 +205,90 @@ public class Network {
 
 
     public void collapseEdges() {
+        ArrayList<Node> toRemove = new ArrayList<>();
         for(Node node: nodes) {
             if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
-                System.out.println("REMOVE: " + node.getId());
-                removeNode(node);
+                toRemove.add(node);
+                //removeNode(node);
             }
         }
+
+        for(Node n: toRemove) {
+            removeNode(n);
+        }
+
+        //remove edges that should have been removed before
+        ArrayList<Edge> edgesTemp = new ArrayList<>();
+        ArrayList<Edge> removedEdges = new ArrayList<>();
+        edgesTemp.addAll(edges);
+        for(Edge e: edges) {
+            Node toNode = e.getToNode();
+            Node fromNode = e.getFromNode();
+            if(toRemove.contains(toNode) || toRemove.contains(fromNode)) {
+                edgesTemp.remove(e);
+                removedEdges.add(e);
+            }
+        }
+
+        edges = edgesTemp;
+
+        //remove duplicate edges
+        ArrayList<Edge> foundEdges = new ArrayList<>();
+        for(Edge e: edges) {
+            if(!edgeIsFound(foundEdges, e)) {
+                foundEdges.add(e);
+            }
+
+        }
+
+        edges = foundEdges;
+
+        findMatchingEdges(removedEdges);
+
+        //remove & renumber nodes
+        int i = 0;
+        ArrayList<Node> tempNodes = new ArrayList<>();
+        tempNodes.addAll(nodes);
+        for(Node n: nodes) {
+            if(n.numOutgoingEdges() == 0 && n.numIncomingEdges() == 0) {
+                tempNodes.remove(n);
+            } else {
+                n.setId(i);
+                i++;
+            }
+        }
+        nodes = tempNodes;
+
+    }
+
+    private void findMatchingEdges(ArrayList<Edge> removedEdges) {
+        System.out.println(removedEdges.toString());
+        for(Edge e: removedEdges) {
+            Node toNode = e.getToNode();
+            Node fromNode = e.getFromNode();
+            int weight = e.getWeight();
+
+            for(Edge foundEdge: edges) {
+                if((foundEdge.getToNode() == toNode || foundEdge.getFromNode() == fromNode) && foundEdge.getWeight() == weight) {
+                    foundEdge.incrementCount();
+                    break;
+                }
+            }
+        }
+
+    }
+
+    private boolean edgeIsFound(ArrayList<Edge> foundEdges, Edge edge) {
+        Node fromNode = edge.getFromNode();
+        Node toNode = edge.getToNode();
+        int weight = edge.getWeight();
+
+        for(Edge e: foundEdges) {
+            if(e.getFromNode() == fromNode && e.getToNode() == toNode && e.getWeight() == weight)
+                return true;
+        }
+
+        return false;
     }
 
 
