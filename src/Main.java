@@ -24,12 +24,13 @@ public class Main {
                 for(Network network: networks) {
                     out.println("**********************************");
                     network.printDetails(out);
-                    //ArrayList<Path> paths = new ArrayList<>();
+                    ArrayList<Path> paths = new ArrayList<>();
                     //paths = findPaths(network, paths, out);
                     //System.out.println(paths.toString());
                     out.println("**********************************");
                     network.collapseEdges();
                     network.printDetails(out);
+                    findPaths(network, paths, out);
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
@@ -142,6 +143,7 @@ public class Main {
 
     public static ArrayList<Path> findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
+<<<<<<< HEAD
 
         //while(!network.getEdges().isEmpty()) {
 
@@ -171,17 +173,31 @@ public class Main {
 
                         if (e.getWeight() < minWeight || minWeight < 0) minWeight = e.getWeight();
                     }
-                }
-                pathLength++;
-            }
+=======
+        int[] area = new int[network.numNodes()];
+        int[] nodes = new int[network.numNodes()];
+        int pathLength = 1;
 
-            System.out.println("areas: "+Arrays.toString(area));
-            Path path = new Path(nodes, minWeight);
-            paths.add(path);
-            System.out.println(path.print());
-            network.reducePath(path);
-            network.printDetails(out);
-        //}
+        for(int i = 0; i < area.length; i++) area[i] = -1;
+        for(int i = 0; i < nodes.length; i++) nodes[i] = -1;
+
+        for(int nodeId: network.topoSort()) {
+            Node n = network.getNode(nodeId);
+            for(Edge e: n.getOutgoingEdges()) {
+                int outgoingId = e.getToNode().getId();
+                int weight = e.getWeight();
+                int nodeArea = weight * pathLength;
+                if(nodeArea + area[nodeId] > area[outgoingId]) {
+                    area[outgoingId] = nodeArea;
+                    nodes[nodeId] = outgoingId;
+>>>>>>> 30910e2c0a275d630cc0471748671889b5d8230e
+                }
+            }
+            pathLength++;
+        }
+
+        System.out.println(Arrays.toString(area));
+        System.out.println(Arrays.toString(nodes));
 
         return paths;
     }
