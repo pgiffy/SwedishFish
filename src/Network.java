@@ -28,9 +28,9 @@ public class Network {
             if(weight - pathWeight <= 0) {
                 removeEdge(e);
             } else {
-                System.out.println("SET WEIGHT: " + e.toString() + " | " + (weight-pathWeight));
+                //System.out.println("SET WEIGHT: " + e.toString() + " | " + (weight-pathWeight));
                 e.setWeight(weight - pathWeight);
-                System.out.println(e.toString());
+                //System.out.println(e.toString());
             }
         }
     }
@@ -100,9 +100,9 @@ public class Network {
         removeEdge(inComing);
          
 
-        System.out.println("UPDATED: " + node.printEdges());
-        System.out.println("fromNode = " + fromNode.printEdges());
-        System.out.println("toNode = " + toNode.printEdges());
+        //System.out.println("UPDATED: " + node.printEdges());
+        //System.out.println("fromNode = " + fromNode.printEdges());
+        //System.out.println("toNode = " + toNode.printEdges());
 
     }
 
