@@ -7,9 +7,9 @@ public class Main {
 
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
-        String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
-        String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
-        String truthFile = "/home/dan/dev/instances/rnaseq/human/1.truth"; //only used in single read mode
+        String directory = "/home/dan/dev/instances/simulation";            //only used in multiple read mode
+        String file = "/home/dan/dev/instances/simulation/param1/1000.10.50.graph";   //only used in single read mode
+        String truthFile = "/home/dan/dev/instances/simulation/param1/1000.10.50.truth"; //only used in single read mode
         //String directory = "/home/peter/Desktop/instances/rnaseq";
         //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String importMode = "multiple";                                   //either single or multiple
@@ -68,11 +68,13 @@ public class Main {
             PrintWriter out = null;
             int[] resultBins = new int[10];
             int[] totals = new int[10];
+            int numSuccess = 0;
+            int numTotal = 0;
 
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
 
-                File dir = new File(directory+"/human");
+                File dir = new File(directory+"/param1");
                 File[] files = dir.listFiles();
                 for(int i = 0; i < 10; i++) resultBins[i] = 0;
                 for(int i = 0; i < 10; i++) totals[i] = 0;
@@ -85,12 +87,13 @@ public class Main {
                     String filename = curFile.getName();
                     //System.out.println(ext);
                     if(ext.equals("graph")) {
-                        networks = readGraphFile(directory+"/human/"+filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/human/"+filenameNoExt+".truth");
+                        networks = readGraphFile(directory+"/param1/"+filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/param1/"+filenameNoExt+".truth");
 
                         for(int num: numTruthPaths) {
                             if(num > 10) continue;
                             totals[num-1]++;
+                            numTotal++;
                         }
 
                         System.out.println(Arrays.toString(totals));
@@ -106,6 +109,7 @@ public class Main {
                             if(numPaths <= truthPaths) {
                                 if(truthPaths > 10) continue;
                                 resultBins[truthPaths-1]++;
+                                numSuccess++;
                             }
                             out.println();
                             count++;
@@ -125,6 +129,10 @@ public class Main {
                 double successRate = ((double)resultBins[i] / totals[i]) * 100;
                 System.out.printf("%d\t\t%.2f\n", i+1, successRate);
             }
+
+            System.out.println();
+            double successRate = ((double) numSuccess / numTotal) * 100;
+            System.out.printf("Total Success Rate = %.2f", successRate);
         }
     }
 
