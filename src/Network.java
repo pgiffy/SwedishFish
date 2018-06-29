@@ -58,6 +58,28 @@ public class Network {
         return str;
     }
 
+    public int getMinEdge() {
+        int minWeight = -1;
+        for(Edge e: edges) {
+            if(e.getWeight() < minWeight || minWeight < 0) {
+                minWeight = e.getWeight();
+            }
+        }
+
+        return minWeight;
+    }
+
+    public int getMaxEdge() {
+        int maxWeight = -1;
+        for(Edge e: edges) {
+            if(e.getWeight() > maxWeight || maxWeight < 0) {
+                maxWeight = e.getWeight();
+            }
+        }
+
+        return maxWeight;
+    }
+
     public int numNodes(){
         return nodes.size();
     }

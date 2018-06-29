@@ -8,11 +8,11 @@ public class Main {
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/simulation";            //only used in multiple read mode
-        String file = "/home/dan/dev/instances/simulation/param1/1000.10.50.graph";   //only used in single read mode
+        String file = "/home/dan/dev/instances/rnaseq/human/test.testgraph";   //only used in single read mode
         String truthFile = "/home/dan/dev/instances/simulation/param1/1000.10.50.truth"; //only used in single read mode
         //String directory = "/home/peter/Desktop/instances/rnaseq";
         //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
-        String importMode = "multiple";                                   //either single or multiple
+        String importMode = "single";                                   //either single or multiple
 
 
 
@@ -27,6 +27,7 @@ public class Main {
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
                 networks = readGraphFile(file);
+                System.out.println(networks.toString());
                 ArrayList<Integer> numTruthPaths = readTruthFile(truthFile);
 
                 for(int num: numTruthPaths) {
@@ -34,14 +35,17 @@ public class Main {
                     totals[num-1]++;
                 }
 
-                System.out.println(Arrays.toString(totals));
                 int count = 0;
                 for(Network network: networks) {
                     out.println("Graph # " + count);
                     ArrayList<Path> paths = new ArrayList<>();
                     network.collapseEdges();
-                    //network.printDetails(out);
-                    int numPaths = findPaths(network, paths, out);
+
+                    for(int k = network.getMinEdge(); k < network.getMaxEdge(); k++) {
+                        paths.add(findMaxPath(network, k));
+                    }
+
+                    /*
                     int truthPaths = numTruthPaths.get(count);
                     out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
                     if(numPaths <= truthPaths) {
@@ -49,6 +53,7 @@ public class Main {
                     }
                     out.println();
                     count++;
+                    */
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
@@ -242,35 +247,27 @@ public class Main {
 
     public static int findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
-        //System.out.println(network.toString()+"\n");
         ArrayList<Integer> sortedNodes = network.topoSort();
         while(network.numEdges() > 0) {
-            int[] area = new int[network.numNodes()];
+            int[] weights = new int[network.numNodes()];
             Edge[] selectedEdges = new Edge[network.numNodes()];
-            int pathLength = 1;
 
-            for (int i = 0; i < area.length; i++) area[i] = -1;
+            for (int i = 0; i < weights.length; i++) weights[i] = -1;
             for (int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
-            area[0] = 0;
+            weights[0] = 0;
 
             for (int nodeId : sortedNodes) {
-                //System.out.println("NODEID = " + nodeId);
                 Node n = network.getNode(nodeId);
                 for (Edge e : n.getOutgoingEdges()) {
                     int outgoingId = e.getToNode().getId();
                     int weight = e.getWeight();
-                    int nodeArea = weight * pathLength;
-                    if (nodeArea + area[nodeId] > area[outgoingId]) {
-                        area[outgoingId] = nodeArea + area[nodeId];
+                    if (weight + weights[nodeId] > weights[outgoingId]) {
+                        weights[outgoingId] = weight + weights[nodeId];
                         selectedEdges[outgoingId] = e;
-                        //System.out.println("SELECTED: " + e.toString());
                     }
                 }
-                pathLength++;
             }
 
-
-            //System.out.println("Selected Edges: " + Arrays.toString(selectedEdges));
             ArrayList<Edge> selectedEdges2 = new ArrayList<>();
             int nodeId = network.numNodes()-1;
             Edge e = selectedEdges[nodeId];
@@ -283,16 +280,44 @@ public class Main {
             Path path = new Path(selectedEdges2);
             paths.add(path);
             network.reducePath(path);
-            //System.out.println(network.toString());
-            //System.out.println(Arrays.toString(area));
-            //System.out.println(selectedEdges2.toString());
-            //System.out.println();
         }
 
-        //System.out.println(Arrays.toString(area));
-        //System.out.println(Arrays.toString(selectedEdges));
-        //System.out.println(paths.toString());
-
         return paths.size();
+    }
+
+    /**
+     * Finds the path of maximum length with a flow of k
+     * @param k
+     * @return length of the path (# of nodes, not weight)
+     */
+    public static Path findMaxPath(Network network, int k) {
+        ArrayList<Integer> sortedNodes = network.topoSort();
+        int[] lengths = new int[network.numNodes()];
+        Edge[] selectedEdges = new Edge[network.numNodes()];
+        for(int i = 0; i < lengths.length; i++) lengths[i] = -1;
+        for(int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
+        lengths[0] = 0;
+
+        for(int nodeId: sortedNodes) {
+            Node node = network.getNode(nodeId);
+
+            for(Edge e: node.getOutgoingEdges()) {
+                int weight = e.getWeight();
+                int newLength = 1 + lengths[nodeId];
+                int toNodeId = e.getToNode().getId();
+                if(weight >= k && newLength >= lengths[toNodeId]) {
+                    //take larger weight as tie-breaker
+                    if(newLength == lengths[toNodeId] && weight <= selectedEdges[toNodeId].getWeight()) continue;
+                    lengths[toNodeId] = newLength;
+                    selectedEdges[toNodeId] = e;
+                }
+            }
+        }
+
+        //System.out.printf("MAX PATH (Flow %d) = " + Arrays.toString(lengths)+"\n" + Arrays.toString(selectedEdges)+"\n", k);
+
+        Path path = new Path(selectedEdges, k);
+
+        return path;
     }
 }
