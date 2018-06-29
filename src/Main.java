@@ -7,12 +7,12 @@ public class Main {
 
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
-        String directory = "/home/dan/dev/instances/simulation";            //only used in multiple read mode
-        String file = "/home/dan/dev/instances/rnaseq/human/test.testgraph";   //only used in single read mode
+        String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
+        String file = "/home/dan/dev/instances/simulation/param1/1000.10.50.graph";   //only used in single read mode
         String truthFile = "/home/dan/dev/instances/simulation/param1/1000.10.50.truth"; //only used in single read mode
         //String directory = "/home/peter/Desktop/instances/rnaseq";
         //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
-        String importMode = "single";                                   //either single or multiple
+        String importMode = "multiple";                                   //either single or multiple
 
 
 
@@ -23,11 +23,14 @@ public class Main {
             int[] totals = new int[10];
             for(int i = 0; i < 10; i++) resultBins[i] = 0;
             for(int i = 0; i < 10; i++) totals[i] = 0;
+            int numSuccess = 0;
+            int numTotal = 0;
 
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
                 networks = readGraphFile(file);
-                System.out.println(networks.toString());
+                //System.out.println(networks.toString());
+                System.out.print(".");
                 ArrayList<Integer> numTruthPaths = readTruthFile(truthFile);
 
                 for(int num: numTruthPaths) {
@@ -38,22 +41,40 @@ public class Main {
                 int count = 0;
                 for(Network network: networks) {
                     out.println("Graph # " + count);
-                    ArrayList<Path> paths = new ArrayList<>();
                     network.collapseEdges();
+                    int numPaths = 0;
 
-                    for(int k = network.getMinEdge(); k < network.getMaxEdge(); k++) {
-                        paths.add(findMaxPath(network, k));
+                    while(network.numEdges() > 0) {
+                        ArrayList<Path> paths = new ArrayList<>();
+                        for (int k = network.getMinEdge()-1; k < network.getMaxEdge(); k++) {
+                            paths.add(findMaxPath(network, k));
+                        }
+
+                        int maxArea = -1;
+                        Path selectedPath = null;
+                        for (Path p : paths) {
+                            int area = p.getFlow() * p.getEdges().size();
+                            if (area > maxArea || maxArea < 0) {
+                                maxArea = area;
+                                selectedPath = p;
+                            }
+                        }
+
+                        out.println("SELECTED PATH: " + selectedPath.toString());
+                        numPaths++;
+                        if(selectedPath == null) break;
+                        network.reducePath(selectedPath);
                     }
 
-                    /*
                     int truthPaths = numTruthPaths.get(count);
-                    out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
+                    //out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
                     if(numPaths <= truthPaths) {
                         resultBins[truthPaths-1]++;
+                        numSuccess++;
                     }
-                    out.println();
+                    numTotal++;
+                    //out.println();
                     count++;
-                    */
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
@@ -67,6 +88,11 @@ public class Main {
                 double successRate = ((double)resultBins[i] / totals[i]) * 100;
                 System.out.printf("%d\t\t%.2f\n", i+1, successRate);
             }
+
+            double successRate = ((double) numSuccess / numTotal) * 100;
+            System.out.println("Success Rate = " + successRate);
+
+
         }
 
         if(importMode.equals("multiple")) {
@@ -79,7 +105,7 @@ public class Main {
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
 
-                File dir = new File(directory+"/param1");
+                File dir = new File(directory+"/salmon");
                 File[] files = dir.listFiles();
                 for(int i = 0; i < 10; i++) resultBins[i] = 0;
                 for(int i = 0; i < 10; i++) totals[i] = 0;
@@ -92,8 +118,8 @@ public class Main {
                     String filename = curFile.getName();
                     //System.out.println(ext);
                     if(ext.equals("graph")) {
-                        networks = readGraphFile(directory+"/param1/"+filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/param1/"+filenameNoExt+".truth");
+                        networks = readGraphFile(directory+"/salmon/"+filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/salmon/"+filenameNoExt+".truth");
 
                         for(int num: numTruthPaths) {
                             if(num > 10) continue;
@@ -101,22 +127,43 @@ public class Main {
                             numTotal++;
                         }
 
-                        System.out.println(Arrays.toString(totals));
+                        //System.out.println(Arrays.toString(totals));
+                        System.out.print(".");
                         int count = 0;
                         for(Network network: networks) {
                             out.println("Graph # " + count);
-                            ArrayList<Path> paths = new ArrayList<>();
                             network.collapseEdges();
-                            //network.printDetails(out);
-                            int numPaths = findPaths(network, paths, out);
+                            int numPaths = 0;
+
+                            while(network.numEdges() > 0) {
+                                ArrayList<Path> paths = new ArrayList<>();
+                                for (int k = network.getMinEdge()-1; k < network.getMaxEdge(); k++) {
+                                    paths.add(findMaxPath(network, k));
+                                }
+
+                                int maxArea = -1;
+                                Path selectedPath = null;
+                                for (Path p : paths) {
+                                    int area = p.getFlow() * p.getEdges().size();
+                                    if (area > maxArea || maxArea < 0) {
+                                        maxArea = area;
+                                        selectedPath = p;
+                                    }
+                                }
+
+                                out.println("SELECTED PATH: " + selectedPath.toString());
+                                numPaths++;
+                                if(selectedPath == null) break;
+                                network.reducePath(selectedPath);
+                            }
+
                             int truthPaths = numTruthPaths.get(count);
-                            out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
+                            //out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
                             if(numPaths <= truthPaths) {
                                 if(truthPaths > 10) continue;
                                 resultBins[truthPaths-1]++;
-                                numSuccess++;
                             }
-                            out.println();
+                            //out.println();
                             count++;
                         }
                     }
@@ -245,6 +292,7 @@ public class Main {
         return networks;
     }
 
+    /*
     public static int findPaths(Network network, ArrayList<Path> paths, PrintWriter out) {
 
         ArrayList<Integer> sortedNodes = network.topoSort();
@@ -284,6 +332,7 @@ public class Main {
 
         return paths.size();
     }
+    */
 
     /**
      * Finds the path of maximum length with a flow of k
@@ -306,17 +355,23 @@ public class Main {
                 int newLength = 1 + lengths[nodeId];
                 int toNodeId = e.getToNode().getId();
                 if(weight >= k && newLength >= lengths[toNodeId]) {
-                    //take larger weight as tie-breaker
-                    if(newLength == lengths[toNodeId] && weight <= selectedEdges[toNodeId].getWeight()) continue;
+                    //take smaller weight as tie-breaker
+                    if(newLength == lengths[toNodeId] && weight >= selectedEdges[toNodeId].getWeight()) continue;
                     lengths[toNodeId] = newLength;
                     selectedEdges[toNodeId] = e;
                 }
             }
         }
 
+        //remove null values
+        ArrayList<Edge> selectedEdges2 = new ArrayList<>();
+        for(Edge e: selectedEdges) {
+            if(e != null) selectedEdges2.add(e);
+        }
+
         //System.out.printf("MAX PATH (Flow %d) = " + Arrays.toString(lengths)+"\n" + Arrays.toString(selectedEdges)+"\n", k);
 
-        Path path = new Path(selectedEdges, k);
+        Path path = new Path(selectedEdges2, k);
 
         return path;
     }
