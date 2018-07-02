@@ -8,10 +8,10 @@ public class Main {
 
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
-        String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
+        //String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
         String truthFile = "/home/dan/dev/instances/rnaseq/human/1.truth"; //only used in single read mode
-        //String directory = "/home/peter/Desktop/instances/rnaseq";
+        String directory = "/home/peter/Desktop/instances/rnaseq";
         //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String importMode = "multiple";                                   //either single or multiple
 
