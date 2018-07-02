@@ -9,7 +9,7 @@ public class Main {
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
-        String file = "/home/dan/dev/instances/rnaseq/human/test.testgraph";   //only used in single read mode
+        String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
         String truthFile = "/home/dan/dev/instances/rnaseq/human/1.truth"; //only used in single read mode
         //String directory = "/home/peter/Desktop/instances/rnaseq";
         //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
@@ -20,10 +20,10 @@ public class Main {
         ArrayList<Network> networks;
         if(importMode.equals("single")) {
             PrintWriter out = null;
-            int[] resultBins = new int[10];
-            int[] totals = new int[10];
-            for(int i = 0; i < 10; i++) resultBins[i] = 0;
-            for(int i = 0; i < 10; i++) totals[i] = 0;
+            int[] resultBins = new int[100];
+            int[] totals = new int[100];
+            for(int i = 0; i < 100; i++) resultBins[i] = 0;
+            for(int i = 0; i < 100; i++) totals[i] = 0;
             int numSuccess = 0;
             int numTotal = 0;
 
@@ -79,6 +79,10 @@ public class Main {
                     if(numPaths <= truthPaths) {
                         resultBins[truthPaths-1]++;
                         numSuccess++;
+                    } else {
+                        if(truthPaths == 1) {
+                            System.out.println("FAILED: " + count);
+                        }
                     }
                     numTotal++;
                     //out.println();
@@ -105,8 +109,8 @@ public class Main {
 
         if(importMode.equals("multiple")) {
             PrintWriter out = null;
-            int[] resultBins = new int[10];
-            int[] totals = new int[10];
+            int[] resultBins = new int[100];
+            int[] totals = new int[100];
             int numSuccess = 0;
             int numTotal = 0;
 
@@ -115,8 +119,8 @@ public class Main {
 
                 File dir = new File(directory+"/human");
                 File[] files = dir.listFiles();
-                for(int i = 0; i < 10; i++) resultBins[i] = 0;
-                for(int i = 0; i < 10; i++) totals[i] = 0;
+                for(int i = 0; i < 100; i++) resultBins[i] = 0;
+                for(int i = 0; i < 100; i++) totals[i] = 0;
 
                 for (File curFile : files) {
 
@@ -130,7 +134,6 @@ public class Main {
                         ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/human/"+filenameNoExt+".truth");
 
                         for(int num: numTruthPaths) {
-                            if(num > 10) continue;
                             totals[num-1]++;
                             numTotal++;
                         }
@@ -172,7 +175,6 @@ public class Main {
                             int truthPaths = numTruthPaths.get(count);
                             //out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
                             if(numPaths <= truthPaths) {
-                                if(truthPaths > 10) continue;
                                 resultBins[truthPaths-1]++;
                             }
                             //out.println();
