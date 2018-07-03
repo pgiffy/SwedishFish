@@ -217,5 +217,85 @@ public class Network {
         return false;
     }
 
+    public ArrayList<Integer> ValsToEnd(){
+        ArrayList<Integer> vals = new ArrayList<>();
+        for(Edge e: edges){
+            if(e.getToNode().getId() == nodes.size()-1 && !vals.contains(e.getToNode().getId())){
+                vals.add(e.getWeight());
+            }
+
+        }
+        return vals;
+    }
+
+    public ArrayList<Integer> ValsFromZero(){
+        ArrayList<Integer> vals = new ArrayList<>();
+        for(Edge e: edges){
+            if(e.getFromNode().getId() == 0 && !vals.contains(e.getFromNode().getId())){
+                vals.add(e.getWeight());
+            }
+
+        }
+        return vals;
+    }
+
+    public ArrayList<Integer> possibleVals(){
+        ArrayList<Integer> toLast = new ArrayList<>();
+        ArrayList<Integer> fromFirst = new ArrayList<>();
+        ArrayList<Integer> toCheck = new ArrayList<>();
+        for(Edge e: edges){
+            if(e.getFromNode().getId() == 0 && !fromFirst.contains(e.getFromNode().getId())){
+                fromFirst.add(e.getWeight());
+            }
+
+        }
+        for(Edge e: edges){
+            if(e.getToNode().getId() == nodes.size() - 1 && !toLast.contains(e.getToNode().getId())){
+                toLast.add(e.getWeight());
+            }
+        }
+        ArrayList<Integer> toRemoveFirst = new ArrayList<>();
+        for(Integer i: fromFirst){
+            if(toLast.contains(i)){
+                toCheck.add(i);
+                toRemoveFirst.add(i);
+                toLast.remove(i);
+            }
+        }
+
+        for(Integer i: toRemoveFirst){
+            fromFirst.remove(i);
+        }
+
+        ArrayList<Integer> temp = new ArrayList<>();
+        for(Integer i: fromFirst){
+            temp = findPairs(toLast, i);
+            toCheck.addAll(temp);
+        }
+        for(Integer i: toLast){
+            temp = findPairs(fromFirst, i);
+            toCheck.addAll(temp);
+        }
+
+        return toCheck;
+    }
+
+    public static ArrayList<Integer> findPairs(ArrayList<Integer> nums, int sum){
+        ArrayList<Integer> toReturn = new ArrayList<>();
+        HashSet<Integer> s = new HashSet<Integer>();
+        for (int i: nums)
+        {
+            int temp = sum-i;
+
+            // checking for condition
+            if (temp>=0 && s.contains(temp))
+            {
+               toReturn.add(i);
+               toReturn.add(temp);
+            }
+            s.add(i);
+        }
+        return toReturn;
+    }
 
 }

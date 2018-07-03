@@ -9,12 +9,12 @@ public class Main {
         //config variables:
         String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         //String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
-        String file = "/home/dan/dev/instances/rnaseq/human/1.graph";   //only used in single read mode
-        String truthFile = "/home/dan/dev/instances/rnaseq/human/1.truth"; //only used in single read mode
+        //String file = "/home/dan/dev/instances/rnaseq/test/1.graph";   //only used in single read mode
+        //String truthFile = "/home/dan/dev/instances/rnaseq/test/1.truth"; //only used in single read mode
         String directory = "/home/peter/Desktop/instances/rnaseq";
-        //String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
+        String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
+        String truthFile = "/home/peter/Desktop/instances/rnaseq/test/1.truth";
         String importMode = "multiple";                                   //either single or multiple
-
 
 
         ArrayList<Network> networks;
@@ -26,6 +26,7 @@ public class Main {
             for(int i = 0; i < 100; i++) totals[i] = 0;
             int numSuccess = 0;
             int numTotal = 0;
+
 
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
@@ -41,6 +42,9 @@ public class Main {
 
                 int count = 0;
                 for(Network network: networks) {
+                    ArrayList<Integer> valK = network.ValsFromZero();
+                    Collections.sort(valK);
+                    Collections.reverse(valK);
                     out.println("Graph # " + count);
                     network.collapseEdges();
                     out.println(network.toString());
@@ -49,11 +53,24 @@ public class Main {
 
                     while(network.numEdges() > 0) {
                         ArrayList<Path> paths = new ArrayList<>();
-                        for (int k = network.getMinEdge()-1; k < network.getMaxEdge(); k++) {
+                        for(int k: valK){
+                            System.out.println(k);
                             Path newPath = findMaxPath(network, k, sortedNodes, out);
-                            if(newPath != null) {
-                                paths.add(newPath);
+                            network.reducePath(newPath);
+                            out.println("SELECTED PATH: " + newPath.toString());
+                            numPaths++;
+                            if(newPath == null){
+                                out.println("SWITCHING");
+                                break;
                             }
+                        }
+
+                        for (int k = network.getMinEdge()-1; k < network.getMaxEdge(); k++) {
+                                Path newPath = findMaxPath(network, k, sortedNodes, out);
+                                if(newPath != null) {
+                                    paths.add(newPath);
+                                }
+
                         }
 
                         int maxArea = -1;
@@ -65,10 +82,10 @@ public class Main {
                                 selectedPath = p;
                             }
                         }
-
+                        if(selectedPath == null) break;
                         out.println("SELECTED PATH: " + selectedPath.toString());
                         numPaths++;
-                        if(selectedPath == null) break;
+
                         network.reducePath(selectedPath);
                     }
 
@@ -142,18 +159,35 @@ public class Main {
                         System.out.print(".");
                         int count = 0;
                         for(Network network: networks) {
+                            //ArrayList<Integer> valK = network.ValsFromZero();
+                            //ArrayList<Integer> valK = network.possibleVals();
+                            ArrayList<Integer> valK = network.ValsToEnd();
+                            Collections.sort(valK);
+                            Collections.reverse(valK);
                             //out.println("Graph # " + count);
                             network.collapseEdges();
                             int numPaths = 0;
                             ArrayList<Integer> sortedNodes = network.topoSort();
-
                             while(network.numEdges() > 0) {
                                 ArrayList<Path> paths = new ArrayList<>();
+                                for(int k: valK){
+                                    Path newPath = findMaxPath(network, k, sortedNodes, out);
+                                    if(newPath == null){
+                                        out.println("SWITCHING");
+                                        break;
+                                    }
+                                    network.reducePath(newPath);
+                                    //out.println("SELECTED PATH: " + newPath.toString());
+                                    numPaths++;
+
+                                }
+
                                 for (int k = network.getMinEdge()-1; k < network.getMaxEdge(); k++) {
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
                                     if(newPath != null) {
                                         paths.add(newPath);
                                     }
+
                                 }
 
                                 int maxArea = -1;
@@ -165,10 +199,10 @@ public class Main {
                                         selectedPath = p;
                                     }
                                 }
-
+                                if(selectedPath == null) break;
                                 //out.println("SELECTED PATH: " + selectedPath.toString());
                                 numPaths++;
-                                if(selectedPath == null) break;
+
                                 network.reducePath(selectedPath);
                             }
 
@@ -353,7 +387,11 @@ public class Main {
      * @param k
      * @return length of the path (# of nodes, not weight)
      */
+
+
     public static Path findMaxPath(Network network, int k, ArrayList<Integer> sortedNodes, PrintWriter out) {
+
+
         int[] lengths = new int[network.numNodes()];
         Edge[] selectedEdges = new Edge[network.numNodes()];
         for(int i = 0; i < lengths.length; i++) lengths[i] = -1;
@@ -368,12 +406,14 @@ public class Main {
                 int weight = e.getWeight();
                 int newLength = 1 + lengths[nodeId];
                 int toNodeId = e.getToNode().getId();
-                if(weight >= k && newLength >= lengths[toNodeId]) {
-                    //take smaller weight as tie-breaker
-                    if(newLength == lengths[toNodeId] && weight >= selectedEdges[toNodeId].getWeight()) continue;
-                    lengths[toNodeId] = newLength;
-                    selectedEdges[toNodeId] = e;
-                }
+
+                    if (weight >= k && newLength >= lengths[toNodeId]) {
+                        //take smaller weight as tie-breaker
+                        if (newLength == lengths[toNodeId] && weight >= selectedEdges[toNodeId].getWeight()) continue;
+                        lengths[toNodeId] = newLength;
+                        selectedEdges[toNodeId] = e;
+                    }
+
             }
         }
 
@@ -403,4 +443,6 @@ public class Main {
 
         return path;
     }
+
+
 }
