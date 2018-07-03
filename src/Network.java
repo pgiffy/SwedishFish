@@ -10,6 +10,11 @@ public class Network {
         nodes = new ArrayList<>();
     }
 
+    public Network(Network network){
+        this.edges = network.getEdges();
+        this.nodes = network.getNodes();
+    }
+
     public void addNode(){
         nodes.add(new Node(nodes.size()));
     }
@@ -116,16 +121,12 @@ public class Network {
         Node toNode = node.getToNodes().get(0);
         Edge outGoing = getEdge(node, toNode);
         Edge inComing = getEdge(fromNode, node);
-        Edge newEdge = new Edge(fromNode, toNode, inComing.getWeight());
         addEdge(fromNode, toNode, inComing.getWeight());
         removeEdge(outGoing);
         removeEdge(inComing);
-         
-
         //System.out.println("UPDATED: " + node.printEdges());
         //System.out.println("fromNode = " + fromNode.printEdges());
         //System.out.println("toNode = " + toNode.printEdges());
-
     }
 
 
@@ -183,9 +184,10 @@ public class Network {
             }
         }
         nodes = tempNodes;
-
-
     }
+
+
+
 
     private void findMatchingEdges(ArrayList<Edge> removedEdges) {
         System.out.println(removedEdges.toString());
@@ -230,11 +232,12 @@ public class Network {
 
     public ArrayList<Integer> ValsFromZero(){
         ArrayList<Integer> vals = new ArrayList<>();
+        ArrayList<Integer> nodeIds = new ArrayList<>();
         for(Edge e: edges){
-            if(e.getFromNode().getId() == 0 && !vals.contains(e.getFromNode().getId())){
-                vals.add(e.getWeight());
+            if(e.getFromNode().getId() == 0 && !nodeIds.contains(e.getToNode().getId())){
+                    vals.add(e.getWeight());
+                    nodeIds.add(e.getToNode().getId());
             }
-
         }
         return vals;
     }
