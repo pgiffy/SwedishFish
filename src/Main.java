@@ -124,7 +124,6 @@ public class Main {
 
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
-
                 File dir = new File(directory+"/human");
                 File[] files = dir.listFiles();
                 for(int i = 0; i < 100; i++) resultBins[i] = 0;
@@ -146,74 +145,77 @@ public class Main {
                         }
 
                         //System.out.println(Arrays.toString(totals));
-                        System.out.print(".");
+                        System.out.print("*");
                         int count = 0;
                         for(Network network: networks) {
                             //out.println("Graph # " + count);
-                            ArrayList<Integer> valK = network.ValsFromZero();
-                            Collections.sort(valK);
-                            Collections.reverse(valK);
-                            Network copy = new Network(network);
-                            Network copy2 = new Network(network);
                             network.collapseEdges();
-                            int numPaths = 0;
                             ArrayList<Integer> sortedNodes = network.topoSort();
+                            ArrayList<Integer> kZero = network.ValsFromZero();
+                            Collections.sort(kZero);
+                            Collections.reverse(kZero);
+                            Network copy = new Network(network);
+                            Network copy1 = new Network(network);
+                            Network copy2 = new Network(network);
+                            ArrayList<Integer> kEnd = new ArrayList<>();
+
+                            int numPaths = 0;
                             while(network.numEdges() > 0) {
-                                ArrayList<Path> paths;
-                                for (int k : valK) {
+
+                                for (int k : kZero) {
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                    if (newPath == null) {
-                                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                    if (newPath == null){
                                         network = copy;
-                                        valK = network.ValsToEnd();
-                                        Collections.sort(valK);
-                                        Collections.reverse(valK);
-                                        network.collapseEdges();
-                                        numPaths = 0;
-                                        sortedNodes = network.topoSort();
-                                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                        kEnd = network.ValsToEnd();
+                                        Collections.sort(kEnd);
+                                        Collections.reverse(kEnd);
                                         break;
                                     }
+
                                     network.reducePath(newPath);
-                                    out.println("SELECTED PATH: " + newPath.toString());
+                                        //out.println("SELECTED PATH: " + newPath.toString());
                                     numPaths++;
 
                                 }
-
+                                //if(network.numEdges() == 0) break;
+                                //network = copy;
+                                //numPaths = 0;
 
                                 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                                for(int k: valK){
+                                for(int k: kEnd){
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
                                     if(newPath == null){
-                                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                        /*network = copy2;
-                                        valK = network.possibleVals();
-                                        Collections.sort(valK);
-                                        Collections.reverse(valK);
-                                        network.collapseEdges();
-                                        numPaths = 0;
-                                        sortedNodes = network.topoSort();*/
-                                        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                         break;
                                     }
 
                                         network.reducePath(newPath);
-                                        out.println("SELECTED PATH: " + newPath.toString());
+                                        //out.println("SELECTED PATH: " + newPath.toString());
                                         numPaths++;
                                     }
+                                //if(network.numEdges() == 0) break;
+                                //network = copy1;
+                                //numPaths = 0;
                                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                                /*for(int k: valK){
+                                /*for(int k: kPossible){
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                    if(newPath == null) break;
-                                    network.reducePath(newPath);//out.println("SELECTED PATH: " + newPath.toString());
+                                    if(newPath == null){
+                                        network = copy2;
+                                        numPaths = 0;
+                                        break;
+                                    }
+
+                                    network.reducePath(newPath);
+                                   // out.println("SELECTED PATH: " + newPath.toString());
                                         numPaths++;
                                 }*/
-
+                                //if(network.numEdges() == 0) break;
+                                //network = copy2;
+                                //numPaths = 0;
 
                                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                paths = new ArrayList<>();
+                                ArrayList<Path> paths = new ArrayList<>();
                                 for (int k = network.getMinEdge()-1; k <= network.getMaxEdge(); k++) {
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
                                     if(newPath != null) {
@@ -232,13 +234,13 @@ public class Main {
                                     }
                                 }
                                 if(selectedPath == null) break;
-                                out.println("SELECTED PATH: " + selectedPath.toString());
+                                //out.println("SELECTED PATH: " + selectedPath.toString());
                                 numPaths++;
 
                                 network.reducePath(selectedPath);
 
 
-                            }//=============================================================================================================================================
+                            }//=======================================================================================================================================================================
 
                             int truthPaths = numTruthPaths.get(count);
                             out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
@@ -258,15 +260,15 @@ public class Main {
                 out.close();
             }
 
-            System.out.printf("# Paths\tSuccess Rate\n");
+            System.out.printf("\n# Paths\tSuccess Rate\n");
             for(int i = 0; i < 10; i++) {
                 double successRate = ((double)resultBins[i] / totals[i]) * 100;
                 System.out.printf("%d\t\t%.2f\n", i+1, successRate);
             }
 
-            System.out.println();
+            /*System.out.println();
             double successRate = ((double) numSuccess / numTotal) * 100;
-            System.out.printf("Total Success Rate = %.2f", successRate);
+            System.out.printf("Total Success Rate = %.2f", successRate);*/
         }
     }
 

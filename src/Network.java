@@ -221,8 +221,9 @@ public class Network {
 
     public ArrayList<Integer> ValsToEnd(){
         ArrayList<Integer> vals = new ArrayList<>();
+        ArrayList<Edge> nodeIds = new ArrayList<>();
         for(Edge e: edges){
-            if(e.getToNode().getId() == nodes.size()-1 && !vals.contains(e.getToNode().getId())){
+            if(e.getToNode().getId() == nodes.size()-1){
                 vals.add(e.getWeight());
             }
 
@@ -232,11 +233,10 @@ public class Network {
 
     public ArrayList<Integer> ValsFromZero(){
         ArrayList<Integer> vals = new ArrayList<>();
-        ArrayList<Integer> nodeIds = new ArrayList<>();
+        ArrayList<Edge> nodeIds = new ArrayList<>();
         for(Edge e: edges){
-            if(e.getFromNode().getId() == 0 && !nodeIds.contains(e.getToNode().getId())){
+            if(e.getFromNode().getId() == 0){
                     vals.add(e.getWeight());
-                    nodeIds.add(e.getToNode().getId());
             }
         }
         return vals;
@@ -244,17 +244,21 @@ public class Network {
 
     public ArrayList<Integer> possibleVals(){
         ArrayList<Integer> toLast = new ArrayList<>();
+        ArrayList<Edge> nodeIdsLast = new ArrayList<>();
         ArrayList<Integer> fromFirst = new ArrayList<>();
+        ArrayList<Edge> nodeIdsFirst = new ArrayList<>();
         ArrayList<Integer> toCheck = new ArrayList<>();
         for(Edge e: edges){
-            if(e.getFromNode().getId() == 0 && !fromFirst.contains(e.getFromNode().getId())){
+            if(e.getFromNode().getId() == 0 && !nodeIdsFirst.contains(e)){
                 fromFirst.add(e.getWeight());
+                nodeIdsFirst.add(e);
             }
 
         }
         for(Edge e: edges){
-            if(e.getToNode().getId() == nodes.size() - 1 && !toLast.contains(e.getToNode().getId())){
+            if(e.getToNode().getId() == nodes.size() && !nodeIdsLast.contains(e)){
                 toLast.add(e.getWeight());
+                nodeIdsLast.add(e);
             }
         }
         ArrayList<Integer> toRemoveFirst = new ArrayList<>();
