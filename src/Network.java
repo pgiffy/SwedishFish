@@ -221,9 +221,8 @@ public class Network {
 
     public ArrayList<Integer> ValsToEnd(){
         ArrayList<Integer> vals = new ArrayList<>();
-        ArrayList<Edge> nodeIds = new ArrayList<>();
         for(Edge e: edges){
-            if(e.getToNode().getId() == nodes.size()-1){
+            if(e.getToNode().getId() == nodes.size()){
                 vals.add(e.getWeight());
             }
 
@@ -233,7 +232,6 @@ public class Network {
 
     public ArrayList<Integer> ValsFromZero(){
         ArrayList<Integer> vals = new ArrayList<>();
-        ArrayList<Edge> nodeIds = new ArrayList<>();
         for(Edge e: edges){
             if(e.getFromNode().getId() == 0){
                     vals.add(e.getWeight());
@@ -241,6 +239,7 @@ public class Network {
         }
         return vals;
     }
+
 
     public ArrayList<Integer> possibleVals(){
         ArrayList<Integer> toLast = new ArrayList<>();
