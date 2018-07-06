@@ -148,6 +148,7 @@ public class Main {
                         //System.out.println(Arrays.toString(totals));
                         System.out.print("*");
                         int count = 0;
+                        int numPaths = 0;
                         for(Network network: networks) {
                             network.collapseEdges();
                             ArrayList<Integer> sortedNodes = network.topoSort();
@@ -156,10 +157,11 @@ public class Main {
                             Collections.sort(valK);
                             Collections.reverse(valK);
 
+
+
                             Network copy = new Network(network);
                             Network copy2 = new Network(network);
-                            int numPaths = 0;
-                            while(network.numEdges() > 0) {
+
                                 ArrayList<Path> paths;
                                 for (int k : valK) {
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
@@ -169,7 +171,7 @@ public class Main {
                                         valK = network.ValsFromZero();
                                         Collections.sort(valK);
                                         Collections.reverse(valK);
-                                        //numPaths = 0;
+                                        numPaths = 0;
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                         break;
                                     }
@@ -178,20 +180,16 @@ public class Main {
                                     numPaths++;
 
                                 }
-                                if(network.numEdges() == 0){
-                                }
-
                                 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
                                 for(int k: valK){
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
                                     if(newPath == null){
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                        /*network = copy2;
-                                        valK = network.possibleVals();
+                                        network = copy2;
+                                        /*valK = network.possibleVals();
                                         Collections.sort(valK);
-                                        Collections.reverse(valK);
-                                        numPaths = 0;*/
+                                        Collections.reverse(valK);*/
+                                        numPaths = 0;
                                         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                         break;
                                     }
@@ -211,14 +209,15 @@ public class Main {
 
 
                                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                paths = new ArrayList<>();
+                                //paths = new ArrayList<>();
                                 //System.out.println("Using area");
+                            while(network.numEdges() > 0){
+                                paths = new ArrayList<>();
                                 for (int k = network.getMinEdge()-1; k <= network.getMaxEdge(); k++) {
                                     Path newPath = findMaxPath(network, k, sortedNodes, out);
                                     if(newPath != null) {
                                         paths.add(newPath);
                                     }
-
                                 }
 
                                 int maxArea = -1;
@@ -233,7 +232,6 @@ public class Main {
                                 if(selectedPath == null) break;
                                 //out.println("SELECTED PATH: " + selectedPath.toString());
                                 numPaths++;
-
                                 network.reducePath(selectedPath);
 
 
