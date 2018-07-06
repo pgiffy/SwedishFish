@@ -11,7 +11,7 @@ public class Main {
         //String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         //String file = "/home/dan/dev/instances/rnaseq/test/1.graph";   //only used in single read mode
         //String truthFile = "/home/dan/dev/instances/rnaseq/test/1.truth"; //only used in single read mode
-        String directory = "/home/peter/Desktop/instances/rnaseq";
+        String directory = "/home/dan/dev/instances/rnaseq";
         String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String truthFile = "/home/peter/Desktop/instances/rnaseq/test/1.truth";
         String importMode = "multiple";                                   //either single or multiple
@@ -153,6 +153,52 @@ public class Main {
                             network.collapseEdges();
                             ArrayList<Integer> sortedNodes = network.topoSort();
                             //out.println("Graph # " + count);
+
+                            // Max Frequencies
+                            System.out.println("***LARGEST FREQUENCY***");
+                            //find weight that appears on the most edges
+                            HashMap<Integer, Integer> frequencies = new HashMap<>();
+                            ArrayList<Edge> edges = network.getEdges();
+                            for(Edge e: edges) {
+                                System.out.println(e.toString());
+                                int weight = e.getWeight();
+                                if(frequencies.get(weight) == null) {
+                                    frequencies.put(weight, 1);
+                                } else {
+                                    int oldFreq = frequencies.get(weight);
+                                    frequencies.put(weight, oldFreq + 1);
+                                }
+                            }
+
+                            int maxFreqWeight = -1;
+                            int maxFreq = -1;
+                            for(Map.Entry entry: frequencies.entrySet()) {
+                                System.out.println(entry.toString());
+                                if((int) entry.getValue() > maxFreq) {
+                                    maxFreq = (int) entry.getValue();
+                                    maxFreqWeight = (int) entry.getKey();
+                                }
+                            }
+
+                            //find the path that has the largest concentration of edges with the
+                            //max-frequency weight
+                            ArrayList<Path> allPaths = getAllPaths(network);
+                            int max = -1;
+                            Path maxPath = null;
+                            //System.out.println(maxFreqWeight);
+                            for(Path path : allPaths) {
+                                System.out.println(path.toString());
+                                //System.out.println(path.toString());
+                                //System.out.println(path.getWeightFreq().toString());
+                                if(path.getWeightFreq().get(maxFreqWeight) != null && path.getWeightFreq().get(maxFreqWeight) > max) {
+                                    max = path.getWeightFreq().get(maxFreqWeight);
+                                    maxPath = path;
+                                }
+                            }
+
+                            network.reducePath(maxPath);
+
+                            // Remove from beginning
                             ArrayList<Integer> valK = network.ValsToEnd();
                             Collections.sort(valK);
                             Collections.reverse(valK);
@@ -429,9 +475,38 @@ public class Main {
 
         //out.printf("MAX PATH (Flow %d) = " + Arrays.toString(lengths)+"\n" + Arrays.toString(selectedEdges)+"\n", k);
 
-        Path path = new Path(selectedEdges2, k);
+        Path path = new Path(selectedEdges2);
 
         return path;
+    }
+
+    public static ArrayList<Path> getAllPaths(Network network) {
+        Node src = network.getNode(0);
+        Node dest = network.getNode(network.numNodes()-1);
+        ArrayList<Path> paths = new ArrayList<>();
+        ArrayList<Edge> path = new ArrayList<>();
+        System.out.println(network.toString());
+
+        return getAllPathsUtil(network, src, dest, paths, path);
+    }
+
+    public static ArrayList<Path> getAllPathsUtil(Network network, Node src, Node dest, ArrayList<Path> paths, ArrayList<Edge> path) {
+        src.setVisited(true);
+
+        if(src.getId() == dest.getId()) paths.add(new Path(path));
+
+        for(Edge e: src.getOutgoingEdges()) {
+            Node n = e.getToNode();
+            if(!n.isVisited()) {
+                path.add(e);
+                getAllPathsUtil(network, n, dest, paths, path);
+                path.remove(e);
+            }
+        }
+
+        src.setVisited(false);
+
+        return paths;
     }
 
 

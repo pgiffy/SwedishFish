@@ -5,6 +5,16 @@ public class Node {
     private ArrayList<Edge> outgoingEdges = new ArrayList<>();
     private ArrayList<Edge> incomingEdges = new ArrayList<>();
     private int id;
+    private boolean isVisited;
+
+    public boolean isVisited() {
+        return isVisited;
+    }
+
+    public void setVisited(boolean newVal) {
+        isVisited = newVal;
+    }
+
 
     public Node(int nodeId){
         id = nodeId;
