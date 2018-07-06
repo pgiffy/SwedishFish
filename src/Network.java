@@ -13,8 +13,22 @@ public class Network {
     public Network(Network network){
         edges = new ArrayList<>();
         nodes = new ArrayList<>();
-        this.edges.addAll(network.getEdges());
-        this.nodes.addAll(network.getNodes());
+        ArrayList<Edge> oldEdges = network.getEdges();
+        int numNodes = network.numNodes();
+
+        for(int i = 0; i < numNodes; i++) {
+            addNode();
+        }
+
+        for(Edge e: oldEdges) {
+            int oldFromId = e.getFromNode().getId();
+            int oldToId = e.getToNode().getId();
+            Node fromNode = getNode(oldFromId);
+            Node toNode = getNode(oldToId);
+            int weight = e.getWeight();
+            addEdge(fromNode, toNode, weight);
+        }
+
     }
 
     public void addNode(){
