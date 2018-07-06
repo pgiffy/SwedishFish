@@ -11,8 +11,10 @@ public class Network {
     }
 
     public Network(Network network){
-        this.edges = network.getEdges();
-        this.nodes = network.getNodes();
+        edges = new ArrayList<>();
+        nodes = new ArrayList<>();
+        this.edges.addAll(network.getEdges());
+        this.nodes.addAll(network.getNodes());
     }
 
     public void addNode(){
@@ -222,7 +224,7 @@ public class Network {
     public ArrayList<Integer> ValsToEnd(){
         ArrayList<Integer> vals = new ArrayList<>();
         for(Edge e: edges){
-            if(e.getToNode().getId() == nodes.size()){
+            if(e.getToNode().getId() == nodes.size()-1){
                 vals.add(e.getWeight());
             }
 
@@ -243,23 +245,13 @@ public class Network {
 
     public ArrayList<Integer> possibleVals(){
         ArrayList<Integer> toLast = new ArrayList<>();
-        ArrayList<Edge> nodeIdsLast = new ArrayList<>();
         ArrayList<Integer> fromFirst = new ArrayList<>();
-        ArrayList<Edge> nodeIdsFirst = new ArrayList<>();
         ArrayList<Integer> toCheck = new ArrayList<>();
-        for(Edge e: edges){
-            if(e.getFromNode().getId() == 0 && !nodeIdsFirst.contains(e)){
-                fromFirst.add(e.getWeight());
-                nodeIdsFirst.add(e);
-            }
 
-        }
-        for(Edge e: edges){
-            if(e.getToNode().getId() == nodes.size() && !nodeIdsLast.contains(e)){
-                toLast.add(e.getWeight());
-                nodeIdsLast.add(e);
-            }
-        }
+        for(Edge e: edges) if(e.getFromNode().getId() == 0) fromFirst.add(e.getWeight());
+
+        for(Edge e: edges) if(e.getToNode().getId() == nodes.size()) toLast.add(e.getWeight());
+
         ArrayList<Integer> toRemoveFirst = new ArrayList<>();
         for(Integer i: fromFirst){
             if(toLast.contains(i)){
@@ -269,11 +261,10 @@ public class Network {
             }
         }
 
-        for(Integer i: toRemoveFirst){
-            fromFirst.remove(i);
-        }
+        for(Integer i: toRemoveFirst) fromFirst.remove(i);
 
         ArrayList<Integer> temp = new ArrayList<>();
+
         for(Integer i: fromFirst){
             temp = findPairs(toLast, i);
             toCheck.addAll(temp);
