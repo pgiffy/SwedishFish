@@ -155,48 +155,50 @@ public class Main {
                             //out.println("Graph # " + count);
 
                             // Max Frequencies
-                            System.out.println("***LARGEST FREQUENCY***");
-                            //find weight that appears on the most edges
-                            HashMap<Integer, Integer> frequencies = new HashMap<>();
-                            ArrayList<Edge> edges = network.getEdges();
-                            for(Edge e: edges) {
-                                System.out.println(e.toString());
-                                int weight = e.getWeight();
-                                if(frequencies.get(weight) == null) {
-                                    frequencies.put(weight, 1);
-                                } else {
-                                    int oldFreq = frequencies.get(weight);
-                                    frequencies.put(weight, oldFreq + 1);
+                            if(network.numNodes() < 20) {
+                                //System.out.println("***LARGEST FREQUENCY***");
+                                //find weight that appears on the most edges
+                                HashMap<Integer, Integer> frequencies = new HashMap<>();
+                                ArrayList<Edge> edges = network.getEdges();
+                                for (Edge e : edges) {
+                                    //System.out.println(e.toString());
+                                    int weight = e.getWeight();
+                                    if (frequencies.get(weight) == null) {
+                                        frequencies.put(weight, 1);
+                                    } else {
+                                        int oldFreq = frequencies.get(weight);
+                                        frequencies.put(weight, oldFreq + 1);
+                                    }
                                 }
-                            }
 
-                            int maxFreqWeight = -1;
-                            int maxFreq = -1;
-                            for(Map.Entry entry: frequencies.entrySet()) {
-                                System.out.println(entry.toString());
-                                if((int) entry.getValue() > maxFreq) {
-                                    maxFreq = (int) entry.getValue();
-                                    maxFreqWeight = (int) entry.getKey();
+                                int maxFreqWeight = -1;
+                                int maxFreq = -1;
+                                for (Map.Entry entry : frequencies.entrySet()) {
+                                    //System.out.println(entry.toString());
+                                    if ((int) entry.getValue() > maxFreq) {
+                                        maxFreq = (int) entry.getValue();
+                                        maxFreqWeight = (int) entry.getKey();
+                                    }
                                 }
-                            }
 
-                            //find the path that has the largest concentration of edges with the
-                            //max-frequency weight
-                            ArrayList<Path> allPaths = getAllPaths(network);
-                            int max = -1;
-                            Path maxPath = null;
-                            //System.out.println(maxFreqWeight);
-                            for(Path path : allPaths) {
-                                System.out.println(path.toString());
-                                //System.out.println(path.toString());
-                                //System.out.println(path.getWeightFreq().toString());
-                                if(path.getWeightFreq().get(maxFreqWeight) != null && path.getWeightFreq().get(maxFreqWeight) > max) {
-                                    max = path.getWeightFreq().get(maxFreqWeight);
-                                    maxPath = path;
+                                //find the path that has the largest concentration of edges with the
+                                //max-frequency weight
+                                ArrayList<Path> allPaths = getAllPaths(network);
+                                int max = -1;
+                                Path maxPath = null;
+                                //System.out.println(maxFreqWeight);
+                                for (Path path : allPaths) {
+                                    //System.out.println(path.toString());
+                                    //System.out.println(path.toString());
+                                    //System.out.println(path.getWeightFreq().toString());
+                                    if (path.getWeightFreq().get(maxFreqWeight) != null && path.getWeightFreq().get(maxFreqWeight) > max) {
+                                        max = path.getWeightFreq().get(maxFreqWeight);
+                                        maxPath = path;
+                                    }
                                 }
-                            }
 
-                            network.reducePath(maxPath);
+                                network.reducePath(maxPath);
+                            }
 
                             // Remove from beginning
                             ArrayList<Integer> valK = network.ValsToEnd();
@@ -485,7 +487,7 @@ public class Main {
         Node dest = network.getNode(network.numNodes()-1);
         ArrayList<Path> paths = new ArrayList<>();
         ArrayList<Edge> path = new ArrayList<>();
-        System.out.println(network.toString());
+        //System.out.println(network.toString());
 
         return getAllPathsUtil(network, src, dest, paths, path);
     }
@@ -493,7 +495,10 @@ public class Main {
     public static ArrayList<Path> getAllPathsUtil(Network network, Node src, Node dest, ArrayList<Path> paths, ArrayList<Edge> path) {
         src.setVisited(true);
 
-        if(src.getId() == dest.getId()) paths.add(new Path(path));
+        if(src.getId() == dest.getId()) {
+            paths.add(new Path(path));
+            //System.out.print(".");
+        }
 
         for(Edge e: src.getOutgoingEdges()) {
             Node n = e.getToNode();
