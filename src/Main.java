@@ -125,7 +125,7 @@ public class Main {
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
 
-                File dir = new File(directory+"/salmon");
+                File dir = new File(directory+"/human");
                 File[] files = dir.listFiles();
                 for(int i = 0; i < 100; i++) resultBins[i] = 0;
                 for(int i = 0; i < 100; i++) totals[i] = 0;
@@ -137,8 +137,8 @@ public class Main {
                     String filenameNoExt = curFile.getName().substring(0, pos);
                     String filename = curFile.getName();
                     if(ext.equals("graph")) {
-                        networks = readGraphFile(directory+"/salmon/"+filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/salmon/"+filenameNoExt+".truth");
+                        networks = readGraphFile(directory+"/human/"+filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/human/"+filenameNoExt+".truth");
 
                         for(int num: numTruthPaths) {
                             totals[num-1]++;
