@@ -59,7 +59,7 @@ public class Main {
                             Network copy2 = new Network(network);
                             ArrayList<Path> paths = new ArrayList<>();
 
-                            /*
+
                             // Max Frequencies
                             if(network.numNodes() < 30) {
                                 //find weight that appears on the most edges
@@ -100,7 +100,7 @@ public class Main {
                                 paths.add(maxPath);
                                 numPaths++;
                             }
-                            */
+
 
                             // Remove from beginning
                             ArrayList<Integer> valK = network.ValsToEnd();
