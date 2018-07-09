@@ -7,18 +7,16 @@ public class Main {
     public static void main(String args[]) {
 
         //config variables:
-        String[] animals = {"human", "mouse", "salmon", "zebrafish"};   //only used in multiple read mode
         //String directory = "/home/dan/dev/instances/rnaseq";            //only used in multiple read mode
         //String file = "/home/dan/dev/instances/rnaseq/test/1.graph";   //only used in single read mode
         //String truthFile = "/home/dan/dev/instances/rnaseq/test/1.truth"; //only used in single read mode
-        String directory = "/home/dan/dev/instances/rnaseq";
+        String directory = "/home/peter/Desktop/instances/rnaseq";
         String file = "/home/peter/Desktop/instances/rnaseq/test/1.graph";         //either single or multiple
         String truthFile = "/home/peter/Desktop/instances/rnaseq/test/1.truth";
         String importMode = "multiple";                                   //either single or multiple
 
-
         ArrayList<Network> networks;
-        if(importMode.equals("multiple")) {
+        if (importMode.equals("multiple")) {
             PrintWriter out = null;
             int[] resultBins = new int[100];
             int[] totals = new int[100];
@@ -28,138 +26,40 @@ public class Main {
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
 
-                File dir = new File(directory+"/human");
+                File dir = new File(directory + "/test");
                 File[] files = dir.listFiles();
-                for(int i = 0; i < 100; i++) resultBins[i] = 0;
-                for(int i = 0; i < 100; i++) totals[i] = 0;
+                for (int i = 0; i < 100; i++) resultBins[i] = 0;
+                for (int i = 0; i < 100; i++) totals[i] = 0;
 
                 for (File curFile : files) {
 
                     int pos = curFile.getName().lastIndexOf(".");
-                    String ext = curFile.getName().substring(pos+1);
+                    String ext = curFile.getName().substring(pos + 1);
                     String filenameNoExt = curFile.getName().substring(0, pos);
                     String filename = curFile.getName();
-                    if(ext.equals("graph")) {
-                        networks = readGraphFile(directory+"/human/"+filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/human/"+filenameNoExt+".truth");
+                    if (ext.equals("graph")) {
+                        networks = readGraphFile(directory + "/test/" + filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/test/" + filenameNoExt + ".truth");
 
-                        for(int num: numTruthPaths) {
-                            totals[num-1]++;
+                        for (int num : numTruthPaths) {
+                            totals[num - 1]++;
                             numTotal++;
                         }
 
                         System.out.print("*");
                         int count = 0;
-                        int numPaths = 0;
-                        for(Network network: networks) {
-                            numPaths = 0;
+                        for (Network network : networks) {
+                            System.out.println("'");
                             network.collapseEdges();
                             ArrayList<Integer> sortedNodes = network.topoSort();
-                            Network copy = new Network(network);
-                            Network copy2 = new Network(network);
                             ArrayList<Path> paths = new ArrayList<>();
 
-
-                            // Max Frequencies
-                            if(network.numNodes() < 30) {
-                                //find weight that appears on the most edges
-                                HashMap<Integer, Integer> frequencies = new HashMap<>();
-                                ArrayList<Edge> edges = network.getEdges();
-                                for (Edge e : edges) {
-                                    int weight = e.getWeight();
-                                    if (frequencies.get(weight) == null) {
-                                        frequencies.put(weight, 1);
-                                    } else {
-                                        int oldFreq = frequencies.get(weight);
-                                        frequencies.put(weight, oldFreq + 1);
-                                    }
-                                }
-
-                                int maxFreqWeight = -1;
-                                int maxFreq = -1;
-                                for (Map.Entry entry : frequencies.entrySet()) {
-                                    if ((int) entry.getValue() > maxFreq) {
-                                        maxFreq = (int) entry.getValue();
-                                        maxFreqWeight = (int) entry.getKey();
-                                    }
-                                }
-
-                                //find the path that has the largest concentration of edges with the
-                                //max-frequency weight
-                                ArrayList<Path> allPaths = getAllPaths(network);
-                                int max = -1;
-                                Path maxPath = null;
-                                for (Path path : allPaths) {
-                                    if (path.getWeightFreq().get(maxFreqWeight) != null && path.getWeightFreq().get(maxFreqWeight) > max) {
-                                        max = path.getWeightFreq().get(maxFreqWeight);
-                                        maxPath = path;
-                                    }
-                                }
-
-                                network.reducePath(maxPath);
-                                paths.add(maxPath);
-                                numPaths++;
-                            }
-
-
-                            // Remove from beginning
-                            ArrayList<Integer> valK = network.ValsToEnd();
-                            Collections.sort(valK);
-                            Collections.reverse(valK);
-
-                            for (int k : valK) {
-                                Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                if (newPath == null) {
-                                    network = copy;
-                                    valK = network.ValsFromZero();
-                                    Collections.sort(valK);
-                                    Collections.reverse(valK);
-                                    numPaths = 0;
-                                    break;
-                                }
-                                network.reducePath(newPath);
-                                numPaths++;
-                            }
-
-                            for(int k: valK){
-                                Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                if(newPath == null){
-                                    network = copy2;
-                                    numPaths = 0;
-                                    break;
-                                }
-
-                                network.reducePath(newPath);
-                                numPaths++;
-                            }
-
-                            while(network.numEdges() > 0) {
-                                paths = new ArrayList<>();
-                                for (int k = network.getMinEdge()-1; k <= network.getMaxEdge(); k++) {
-                                    Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                    if(newPath != null) {
-                                        paths.add(newPath);
-                                    }
-                                }
-
-                                int maxArea = -1;
-                                Path selectedPath = null;
-                                for (Path p : paths) {
-                                    int area = p.getFlow() * p.getEdges().size();
-                                    if (area > maxArea || maxArea < 0) {
-                                        maxArea = area;
-                                        selectedPath = p;
-                                    }
-                                }
-                                if(selectedPath == null) break;
-                                numPaths++;
-                                network.reducePath(selectedPath);
-                            }
+                            int numPaths = shortTerm(network, sortedNodes);
 
                             int truthPaths = numTruthPaths.get(count);
                             out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
-                            if(numPaths <= truthPaths) {
-                                resultBins[truthPaths-1]++;
+                            if (numPaths <= truthPaths) {
+                                resultBins[truthPaths - 1]++;
                             }
 
                             count++;
@@ -175,9 +75,9 @@ public class Main {
             }
 
             System.out.printf("\n# Paths\tSuccess Rate\n");
-            for(int i = 0; i < 10; i++) {
-                double successRate = ((double)resultBins[i] / totals[i]) * 100;
-                System.out.printf("%d\t\t%.2f\n", i+1, successRate);
+            for (int i = 0; i < 10; i++) {
+                double successRate = ((double) resultBins[i] / totals[i]) * 100;
+                System.out.printf("%d\t\t%.2f\n", i + 1, successRate);
             }
 
         }
@@ -185,23 +85,24 @@ public class Main {
 
     /**
      * Parses the lines of a .graph file into a Network object
+     *
      * @param graphs - each row contains a String representation of a graph
      * @return
      */
     public static ArrayList<Network> parseGraph(ArrayList<String> graphs) {
         ArrayList<Network> networks = new ArrayList<>();
-        for(String graph: graphs) {
+        for (String graph : graphs) {
             Network network = new Network();
             String[] lines = graph.split("\n");
             int numNodes = Integer.parseInt(lines[0]);
             //System.out.println("***NEW GRAPH***");
 
-            for(int i = 0; i < numNodes; i++) {
+            for (int i = 0; i < numNodes; i++) {
                 network.addNode();
             }
             //System.out.println(numNodes + " nodes added!");
 
-            for(int i = 1; i < lines.length; i++) {
+            for (int i = 1; i < lines.length; i++) {
                 String[] data = lines[i].split(" ");
                 Node fromNode = network.getNode(Integer.parseInt(data[0]));
                 Node toNode = network.getNode(Integer.parseInt(data[1]));
@@ -223,7 +124,7 @@ public class Main {
         try {
             scan = new Scanner(inputFile);
             scan.useDelimiter("#[\\s\\S]+?[\\n]"); //splits into graphs by # XXX
-            while(scan.hasNext()) {
+            while (scan.hasNext()) {
                 String[] lines = scan.next().split("\n");
                 numTruthPaths.add(lines.length);
             }
@@ -241,15 +142,15 @@ public class Main {
     public static ArrayList<Network> readGraphFiles(String directory, String[] animals) {
         ArrayList<Network> networks = new ArrayList<>();
 
-        for(String animal: animals) {
-            File dir = new File(directory+"/"+animal);
+        for (String animal : animals) {
+            File dir = new File(directory + "/" + animal);
             File[] files = dir.listFiles();
 
             for (File file : files) {
                 int pos = file.getName().lastIndexOf(".");
-                String ext = file.getName().substring(pos+1);
+                String ext = file.getName().substring(pos + 1);
                 //System.out.println(ext);
-                if(!ext.equals("graph")) continue;
+                if (!ext.equals("graph")) continue;
                 String filePath = file.getPath();
                 networks.addAll(readGraphFile(filePath));
             }
@@ -260,6 +161,7 @@ public class Main {
 
     /**
      * Parses a .graph file into individual networks
+     *
      * @param file - path to the file
      * @return - list of networks after running on parseGraph()
      */
@@ -272,7 +174,7 @@ public class Main {
         try {
             scan = new Scanner(inputFile);
             scan.useDelimiter("#[\\s\\S]+?[\\n]"); //splits into graphs by # XXX
-            while(scan.hasNext()) {
+            while (scan.hasNext()) {
                 graphs.add(scan.next());
             }
         } catch (FileNotFoundException e) {
@@ -290,6 +192,7 @@ public class Main {
 
     /**
      * Finds the path of maximum length with a flow of k
+     *
      * @param k
      * @return length of the path (# of nodes, not weight)
      */
@@ -299,45 +202,45 @@ public class Main {
 
         int[] lengths = new int[network.numNodes()];
         Edge[] selectedEdges = new Edge[network.numNodes()];
-        for(int i = 0; i < lengths.length; i++) lengths[i] = -1;
-        for(int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
+        for (int i = 0; i < lengths.length; i++) lengths[i] = -1;
+        for (int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
         lengths[0] = 0;
 
         //System.out.println(sortedNodes);
-        for(int nodeId: sortedNodes) {
+        for (int nodeId : sortedNodes) {
             Node node = network.getNode(nodeId);
 
-            for(Edge e: node.getOutgoingEdges()) {
+            for (Edge e : node.getOutgoingEdges()) {
                 int weight = e.getWeight();
                 int newLength = 1 + lengths[nodeId];
                 int toNodeId = e.getToNode().getId();
 
-                    if (weight >= k && newLength >= lengths[toNodeId]) {
-                        //take smaller weight as tie-breaker
-                        if (newLength == lengths[toNodeId] && weight >= selectedEdges[toNodeId].getWeight()) continue;
-                        lengths[toNodeId] = newLength;
-                        selectedEdges[toNodeId] = e;
-                    }
+                if (weight >= k && newLength >= lengths[toNodeId]) {
+                    //take smaller weight as tie-breaker
+                    if (newLength == lengths[toNodeId] && weight >= selectedEdges[toNodeId].getWeight()) continue;
+                    lengths[toNodeId] = newLength;
+                    selectedEdges[toNodeId] = e;
+                }
 
             }
         }
 
         int count = 0;
-        int i = selectedEdges.length-1;
+        int i = selectedEdges.length - 1;
         //System.out.println(Arrays.toString(selectedEdges));
         Stack<Edge> edgesReverse = new Stack<Edge>();
-        while(i > 0) {
+        while (i > 0) {
             Edge e = selectedEdges[i];
-            if(e == null) return null;
+            if (e == null) return null;
             Node fromNode = e.getFromNode();
             i = fromNode.getId();
             edgesReverse.push(e);
             count++;
-            if(count > selectedEdges.length) return null;
+            if (count > selectedEdges.length) return null;
         }
 
         ArrayList<Edge> selectedEdges2 = new ArrayList<>();
-        while(!edgesReverse.empty()) {
+        while (!edgesReverse.empty()) {
             Edge e = edgesReverse.pop();
             selectedEdges2.add(e);
         }
@@ -351,7 +254,7 @@ public class Main {
 
     public static ArrayList<Path> getAllPaths(Network network) {
         Node src = network.getNode(0);
-        Node dest = network.getNode(network.numNodes()-1);
+        Node dest = network.getNode(network.numNodes() - 1);
         ArrayList<Path> paths = new ArrayList<>();
         ArrayList<Edge> path = new ArrayList<>();
         //System.out.println(network.toString());
@@ -362,14 +265,14 @@ public class Main {
     public static ArrayList<Path> getAllPathsUtil(Network network, Node src, Node dest, ArrayList<Path> paths, ArrayList<Edge> path) {
         src.setVisited(true);
 
-        if(src.getId() == dest.getId()) {
+        if (src.getId() == dest.getId()) {
             paths.add(new Path(path));
             //System.out.print(".");
         }
 
-        for(Edge e: src.getOutgoingEdges()) {
+        for (Edge e : src.getOutgoingEdges()) {
             Node n = e.getToNode();
-            if(!n.isVisited()) {
+            if (!n.isVisited()) {
                 path.add(e);
                 getAllPathsUtil(network, n, dest, paths, path);
                 path.remove(e);
@@ -380,6 +283,127 @@ public class Main {
 
         return paths;
     }
+
+
+    public static int shortTerm(Network network, ArrayList<Integer> sortedNodes) {
+        int numPaths = 0;
+        ArrayList<Integer> possibleVals = network.getAllEdgeWeight();
+        network.getNode(0).addAllPossible(possibleVals);
+
+        for(int node: sortedNodes){
+            for(Edge e: network.getNode(node).getOutgoingEdges()){
+                ArrayList<Integer> valsToUse = network.getNode(node).getPossible();
+                int weight = e.getWeight();
+                int[] vals = new int[valsToUse.size()];
+                int iter = 0;
+                for(int i: valsToUse){
+                    vals[iter] = i;
+                    iter++;
+                }
+                int length = vals.length;
+                ArrayList<Integer> toAdd = new ArrayList<>();
+                printAllSubsets(vals, length, weight, toAdd);
+                e.getToNode().addAllPossible(toAdd);
+                if(e.getToNode().getId() == network.numNodes()-1){
+                    System.out.println(e.getToNode().getPossible());
+                }
+
+            }
+
+        }
+
+        return numPaths;
+    }
+    static boolean[][] dp;
+
+
+    static void addVals(ArrayList<Integer> v, ArrayList<Integer> toAdd){
+        toAdd.addAll(v);
+    }
+
+    static void display(ArrayList<Integer> v)
+    {
+        System.out.println(v);
+    }
+
+
+    static void printSubsetsRec(int arr[], int i, int sum, ArrayList<Integer> p, ArrayList<Integer> toAdd)
+    {
+        // If we reached end and sum is non-zero. We print
+        // p[] only if arr[0] is equal to sun OR dp[0][sum]
+        // is true.
+        if (i == 0 && sum != 0 && dp[0][sum])
+        {
+            p.add(arr[i]);
+            addVals(p, toAdd);
+            p.clear();
+            return;
+        }
+
+        // If sum becomes 0
+        if (i == 0 && sum == 0)
+        {
+            addVals(p, toAdd);
+            p.clear();
+            return;
+        }
+
+        // If given sum can be achieved after ignoring
+        // current element.
+        if (dp[i-1][sum])
+        {
+            // Create a new vector to store path
+            ArrayList<Integer> b = new ArrayList<>();
+            b.addAll(p);
+            printSubsetsRec(arr, i-1, sum, b, toAdd);
+        }
+
+        // If given sum can be achieved after considering
+        // current element.
+        if (sum >= arr[i] && dp[i-1][sum-arr[i]])
+        {
+            p.add(arr[i]);
+            printSubsetsRec(arr, i-1, sum-arr[i], p, toAdd);
+        }
+    }
+
+    // Prints all subsets of arr[0..n-1] with sum 0.
+    static void printAllSubsets(int arr[], int n, int sum, ArrayList<Integer> toAdd)
+    {
+        if (n == 0 || sum < 0)
+            return;
+
+        // Sum 0 can always be achieved with 0 elements
+        dp = new boolean[n][sum + 1];
+        for (int i=0; i<n; ++i)
+        {
+            dp[i][0] = true;
+        }
+
+        // Sum arr[0] can be achieved with single element
+        if (arr[0] <= sum)
+            dp[0][arr[0]] = true;
+
+        // Fill rest of the entries in dp[][]
+        for (int i = 1; i < n; ++i)
+            for (int j = 0; j < sum + 1; ++j)
+                dp[i][j] = (arr[i] <= j) ? (dp[i-1][j] ||
+                        dp[i-1][j-arr[i]])
+                        : dp[i - 1][j];
+        if (dp[n-1][sum] == false)
+        {
+            System.out.println("There are no subsets with" +
+                    " sum "+ sum);
+            return;
+        }
+
+        // Now recursively traverse dp[][] to find all
+        // paths from dp[n-1][sum]
+        ArrayList<Integer> p = new ArrayList<>();
+        printSubsetsRec(arr, n-1, sum, p, toAdd);
+    }
+
+
 
 
 }

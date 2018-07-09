@@ -4,6 +4,7 @@ public class Node {
 
     private ArrayList<Edge> outgoingEdges = new ArrayList<>();
     private ArrayList<Edge> incomingEdges = new ArrayList<>();
+    private ArrayList<Integer> possibleFlows = new ArrayList<>();
     private int id;
     private boolean isVisited;
 
@@ -34,6 +35,11 @@ public class Node {
         if(toReduce.getWeight() == reduceWeight) outgoingEdges.remove(toReduce);
         else toReduce.setWeight(toReduce.getWeight()-reduceWeight);
     }
+
+    public void addPossible(int possible){ possibleFlows.add(possible); }
+    public void addAllPossible(ArrayList<Integer> possible){possibleFlows.addAll(possible);}
+
+    public ArrayList<Integer> getPossible(){ return possibleFlows; }
 
     public ArrayList<Edge> getIncomingEdges() {return incomingEdges;}
     public ArrayList<Edge> getOutgoingEdges() {return outgoingEdges;}
