@@ -31,7 +31,9 @@ public class Network {
 
     }
 
-    public void addNode(){ nodes.add(new Node(nodes.size())); }
+    public void addNode(){
+        nodes.add(new Node(nodes.size()));
+    }
 
     public void addEdge(Node fromNode, Node toNode, int weight){
         Edge newEdge = new Edge(fromNode, toNode, weight);
@@ -305,16 +307,6 @@ public class Network {
             s.add(i);
         }
         return toReturn;
-    }
-
-    public ArrayList<Integer> getAllEdgeWeight(){
-        ArrayList<Integer> edgeWeight = new ArrayList<>();
-        for(Edge e: edges){
-            if(!edgeWeight.contains(e.getWeight())){
-                edgeWeight.add(e.getWeight());
-            }
-        }
-        return edgeWeight;
     }
 
 }
