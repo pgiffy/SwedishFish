@@ -19,6 +19,7 @@ public class Main {
 
         ArrayList<Network> networks;
         if(importMode.equals("multiple")) {
+            String animal = "mouse";
             PrintWriter out = null;
             int[] resultBins = new int[100];
             int[] totals = new int[100];
@@ -28,7 +29,7 @@ public class Main {
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
 
-                File dir = new File(directory+"/human");
+                File dir = new File(directory+"/"+animal);
                 File[] files = dir.listFiles();
                 for(int i = 0; i < 100; i++) resultBins[i] = 0;
                 for(int i = 0; i < 100; i++) totals[i] = 0;
@@ -40,8 +41,8 @@ public class Main {
                     String filenameNoExt = curFile.getName().substring(0, pos);
                     String filename = curFile.getName();
                     if(ext.equals("graph")) {
-                        networks = readGraphFile(directory+"/human/"+filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/human/"+filenameNoExt+".truth");
+                        networks = readGraphFile(directory+"/"+animal+"/"+filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory+"/"+animal+"/"+filenameNoExt+".truth");
 
                         for(int num: numTruthPaths) {
                             totals[num-1]++;
@@ -50,17 +51,20 @@ public class Main {
 
                         System.out.print("*");
                         int count = 0;
-                        int numPaths = 0;
+                        int numPaths;
                         for(Network network: networks) {
                             numPaths = 0;
                             network.collapseEdges();
+                            //network.printDOT("graph.dot");
                             ArrayList<Integer> sortedNodes = network.topoSort();
                             Network copy = new Network(network);
                             Network copy2 = new Network(network);
+                            Network origNetwork = new Network(network);
                             ArrayList<Path> paths = new ArrayList<>();
 
 
                             // Max Frequencies
+                            /*
                             if(network.numNodes() < 30) {
                                 //find weight that appears on the most edges
                                 HashMap<Integer, Integer> frequencies = new HashMap<>();
@@ -100,9 +104,10 @@ public class Main {
                                 paths.add(maxPath);
                                 numPaths++;
                             }
-
+                            /**/
 
                             // Remove from beginning
+                            /**/
                             ArrayList<Integer> valK = network.ValsToEnd();
                             Collections.sort(valK);
                             Collections.reverse(valK);
@@ -117,10 +122,14 @@ public class Main {
                                     numPaths = 0;
                                     break;
                                 }
+                                paths.add(newPath);
                                 network.reducePath(newPath);
                                 numPaths++;
                             }
+                            /**/
 
+                            //remove from end
+                            /**/
                             for(int k: valK){
                                 Path newPath = findMaxPath(network, k, sortedNodes, out);
                                 if(newPath == null){
@@ -129,35 +138,26 @@ public class Main {
                                     break;
                                 }
 
+                                paths.add(newPath);
                                 network.reducePath(newPath);
                                 numPaths++;
                             }
+                            /**/
 
+                            //greedy-width
                             while(network.numEdges() > 0) {
-                                paths = new ArrayList<>();
-                                for (int k = network.getMinEdge()-1; k <= network.getMaxEdge(); k++) {
-                                    Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                    if(newPath != null) {
-                                        paths.add(newPath);
-                                    }
-                                }
-
-                                int maxArea = -1;
-                                Path selectedPath = null;
-                                for (Path p : paths) {
-                                    int area = p.getFlow() * p.getEdges().size();
-                                    if (area > maxArea || maxArea < 0) {
-                                        maxArea = area;
-                                        selectedPath = p;
-                                    }
-                                }
-                                if(selectedPath == null) break;
-                                numPaths++;
+                                Path selectedPath = findFattestPath(network);
                                 network.reducePath(selectedPath);
+                                paths.add(selectedPath);
+                                numPaths++;
                             }
 
+                            //print results
                             int truthPaths = numTruthPaths.get(count);
                             out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
+                            if(truthPaths != numPaths) {
+                                //origNetwork.printDOT("wrongGraphs/"+filenameNoExt+"_"+count+"_"+truthPaths+".dot", paths);
+                            }
                             if(numPaths <= truthPaths) {
                                 resultBins[truthPaths-1]++;
                             }
@@ -181,6 +181,50 @@ public class Main {
             }
 
         }
+    }
+
+    private static Path findFattestPath(Network network) {
+        //System.out.println(network.toString());
+        ArrayList<Integer> sortedNodes = network.topoSort();
+        int flow[] = new int[network.numNodes()];
+        Edge edges[] = new Edge[network.numNodes()];
+        for(int i = 0; i < flow.length; i++) {
+            flow[i] = -1;
+            edges[i] = null;
+        }
+
+        for(int u: sortedNodes) {
+            for(Edge e: network.getNode(u).getOutgoingEdges()) {
+                int v = e.getToNode().getId();
+                int weight = e.getWeight();
+
+                if(weight < flow[u] || flow[u] < 0) {
+                    if(weight >= flow[v]) {
+                        flow[v] = weight;
+                        edges[v] = e;
+                    }
+                } else {
+                    if(flow[u] >= flow[v]) {
+                        flow[v] = flow[u];
+                        edges[v] = e;
+                    }
+                }
+            }
+        }
+
+       // System.out.println(Arrays.toString(flow));
+       // System.out.println(Arrays.toString(edges));
+
+        ArrayList<Edge> pathEdges = new ArrayList<>();
+        Edge e = edges[edges.length-1];
+        while(e != null) {
+            pathEdges.add(e);
+            e = edges[e.getFromNode().getId()];
+        }
+
+        //System.out.println(pathEdges.toString());
+
+        return new Path(pathEdges);
     }
 
     /**
@@ -293,8 +337,6 @@ public class Main {
      * @param k
      * @return length of the path (# of nodes, not weight)
      */
-
-
     public static Path findMaxPath(Network network, int k, ArrayList<Integer> sortedNodes, PrintWriter out) {
 
         int[] lengths = new int[network.numNodes()];
@@ -318,7 +360,6 @@ public class Main {
                         lengths[toNodeId] = newLength;
                         selectedEdges[toNodeId] = e;
                     }
-
             }
         }
 

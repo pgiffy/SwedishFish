@@ -1,9 +1,12 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
 public class Network {
 
     private ArrayList<Edge> edges;
     private ArrayList<Node> nodes;
+    private char[] letters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
     public Network(){
         edges = new ArrayList<>();
@@ -36,7 +39,7 @@ public class Network {
     }
 
     public void addEdge(Node fromNode, Node toNode, int weight){
-        Edge newEdge = new Edge(fromNode, toNode, weight);
+        Edge newEdge = new Edge(fromNode, toNode, weight, edges.size());
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
         toNode.addIncomingEdge(newEdge);
@@ -307,6 +310,75 @@ public class Network {
             s.add(i);
         }
         return toReturn;
+    }
+
+    public void printDOT(String filename) {
+        File outputFile = new File(filename);
+        PrintWriter out = null;
+
+        try {
+            out = new PrintWriter(outputFile);
+
+            out.println("digraph G {");
+
+            for(Edge e: edges) {
+                int fromNodeId = e.getFromNode().getId();
+                int toNodeId = e.getToNode().getId();
+                int weight = e.getWeight();
+                out.printf("\t%d -> %d [label=\"%d\"]\n", fromNodeId, toNodeId, weight);
+            }
+
+            out.println("}");
+        } catch (FileNotFoundException e) {
+            System.out.println("file not found.");
+            e.printStackTrace();
+        } finally {
+            out.close();
+        }
+    }
+
+    public void printDOT(String filename, ArrayList<Path> paths) {
+        File outputFile = new File(filename);
+        PrintWriter out = null;
+        String[] colors = {"green", "blue", "yellow", "purple", "pink", "orange", "navy", "aquamarine", "cyan", "lightsteelblue1"};
+        HashMap<Integer, String> edgeColors = new HashMap<>();
+
+        try {
+            out = new PrintWriter(outputFile);
+
+            out.println("digraph G {");
+
+            //initially set all edges to black
+            for(Edge e: edges) {
+                edgeColors.put(e.getId(), "black");
+            }
+
+            int i = 0;
+            for(Path p: paths) {
+                String color;
+                if(i > 9) color = "red";
+                else color = colors[i];
+                //System.out.println(color);
+
+                for(Edge e: p.getEdges()) {
+                    edgeColors.put(e.getId(), color);
+                    //System.out.println(e.toString());
+                    int fromNodeId = e.getFromNode().getId();
+                    int toNodeId = e.getToNode().getId();
+                    int weight = e.getWeight();
+                    out.printf("\t%d -> %d [label=\"%d\", color=\"%s\"]\n", fromNodeId, toNodeId, weight, color);
+                }
+
+                i++;
+            }
+
+            out.println("}");
+        } catch (FileNotFoundException e) {
+            System.out.println("file not found.");
+            e.printStackTrace();
+        } finally {
+            out.close();
+        }
     }
 
 }

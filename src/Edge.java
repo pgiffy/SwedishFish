@@ -3,13 +3,18 @@ public class Edge {
     private Node toNode;
     private Node fromNode;
     private int count;
+    private int id;
 
-    public Edge(Node FromNode, Node ToNode, int edgeWeight) {
+    public Edge(Node FromNode, Node ToNode, int edgeWeight, int newId) {
         weight = edgeWeight;
         toNode = ToNode;
         fromNode = FromNode;
+        id = newId;
     }
 
+    public int getId() {
+        return id;
+    }
 
     public void incrementCount() {
         count++;
@@ -40,7 +45,7 @@ public class Edge {
     }
 
     public String toString() {
-        return "Edge: " + fromNode.toString() + " -> " + toNode.toString() + " (Weight = " + weight+", Count = "+count+")";
+        return "Edge " + id + ": " + fromNode.toString() + " -> " + toNode.toString() + " (Weight = " + weight+", Count = "+count+")";
     }
 
 

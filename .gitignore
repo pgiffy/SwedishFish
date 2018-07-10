@@ -2,3 +2,5 @@ out/
 .idea/
 *.iml
 outputFile.txt
+wrongGraphs/*
+*.dot
