@@ -6,7 +6,6 @@ public class Network {
 
     private ArrayList<Edge> edges;
     private ArrayList<Node> nodes;
-    private char[] letters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
     public Network(){
         edges = new ArrayList<>();
@@ -29,7 +28,8 @@ public class Network {
             Node fromNode = getNode(oldFromId);
             Node toNode = getNode(oldToId);
             int weight = e.getWeight();
-            addEdge(fromNode, toNode, weight);
+            int id = e.getId();
+            addEdge(fromNode, toNode, weight, id);
         }
 
     }
@@ -40,6 +40,13 @@ public class Network {
 
     public void addEdge(Node fromNode, Node toNode, int weight){
         Edge newEdge = new Edge(fromNode, toNode, weight, edges.size());
+        edges.add(newEdge);
+        fromNode.addEdge(newEdge);
+        toNode.addIncomingEdge(newEdge);
+    }
+
+    public void addEdge(Node fromNode, Node toNode, int weight, int id){
+        Edge newEdge = new Edge(fromNode, toNode, weight, id);
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
         toNode.addIncomingEdge(newEdge);

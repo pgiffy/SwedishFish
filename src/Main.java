@@ -19,7 +19,7 @@ public class Main {
 
         ArrayList<Network> networks;
         if(importMode.equals("multiple")) {
-            String animal = "mouse";
+            String animal = "test";
             PrintWriter out = null;
             int[] resultBins = new int[100];
             int[] totals = new int[100];
@@ -129,11 +129,14 @@ public class Main {
                             /**/
 
                             //remove from end
-                            /**/
+                            /*
                             for(int k: valK){
                                 Path newPath = findMaxPath(network, k, sortedNodes, out);
                                 if(newPath == null){
                                     network = copy2;
+                                    valK = network.ValsToEnd();
+                                    Collections.sort(valK);
+                                    Collections.reverse(valK);
                                     numPaths = 0;
                                     break;
                                 }
@@ -155,9 +158,8 @@ public class Main {
                             //print results
                             int truthPaths = numTruthPaths.get(count);
                             out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
-                            if(truthPaths != numPaths) {
-                                //origNetwork.printDOT("wrongGraphs/"+filenameNoExt+"_"+count+"_"+truthPaths+".dot", paths);
-                            }
+                            origNetwork.printDOT("graph3.dot", paths);
+                            System.out.println(paths.toString());
                             if(numPaths <= truthPaths) {
                                 resultBins[truthPaths-1]++;
                             }
