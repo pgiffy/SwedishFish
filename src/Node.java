@@ -38,8 +38,13 @@ public class Node {
     public ArrayList<Edge> getIncomingEdges() {return incomingEdges;}
     public ArrayList<Edge> getOutgoingEdges() {return outgoingEdges;}
 
-    public void removeIncomingEdge(Edge e) { incomingEdges.remove(e); }
-    public void removeOutgoingEdge(Edge e) { outgoingEdges.remove(e); }
+    public void removeIncomingEdge(Edge e) {
+        incomingEdges.remove(e);
+    }
+
+    public void removeOutgoingEdge(Edge e) {
+        outgoingEdges.remove(e);
+    }
 
     public int numIncomingEdges() { return incomingEdges.size(); }
 

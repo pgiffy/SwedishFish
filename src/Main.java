@@ -19,10 +19,12 @@ public class Main {
 
         ArrayList<Network> networks;
         if(importMode.equals("multiple")) {
-            String animal = "test";
+            String animal = "human";
             PrintWriter out = null;
             int[] resultBins = new int[100];
             int[] totals = new int[100];
+            int[] methodUsage = new int[4];
+            for(int i = 0; i < 4; i++) methodUsage[i] = 0;
             int numSuccess = 0;
             int numTotal = 0;
 
@@ -51,115 +53,93 @@ public class Main {
 
                         System.out.print("*");
                         int count = 0;
-                        int numPaths;
                         for(Network network: networks) {
-                            numPaths = 0;
                             network.collapseEdges();
-                            //network.printDOT("graph.dot");
-                            ArrayList<Integer> sortedNodes = network.topoSort();
-                            Network copy = new Network(network);
-                            Network copy2 = new Network(network);
-                            Network origNetwork = new Network(network);
-                            ArrayList<Path> paths = new ArrayList<>();
 
+                            //greedy edge removal
+                            Network network1 = new Network(network);
+                            Network network1a = new Network(network);
+                            ArrayList<Path> paths1 = new ArrayList<>();
+                            ArrayList<Path> toRemoveList = new ArrayList<>();
+                            Path toRemove = null;
+                            toRemoveList = greedyEdgeRemove(network1);
 
-                            // Max Frequencies
-                            /*
-                            if(network.numNodes() < 30) {
-                                //find weight that appears on the most edges
-                                HashMap<Integer, Integer> frequencies = new HashMap<>();
-                                ArrayList<Edge> edges = network.getEdges();
-                                for (Edge e : edges) {
-                                    int weight = e.getWeight();
-                                    if (frequencies.get(weight) == null) {
-                                        frequencies.put(weight, 1);
-                                    } else {
-                                        int oldFreq = frequencies.get(weight);
-                                        frequencies.put(weight, oldFreq + 1);
-                                    }
-                                }
-
-                                int maxFreqWeight = -1;
-                                int maxFreq = -1;
-                                for (Map.Entry entry : frequencies.entrySet()) {
-                                    if ((int) entry.getValue() > maxFreq) {
-                                        maxFreq = (int) entry.getValue();
-                                        maxFreqWeight = (int) entry.getKey();
-                                    }
-                                }
-
-                                //find the path that has the largest concentration of edges with the
-                                //max-frequency weight
-                                ArrayList<Path> allPaths = getAllPaths(network);
-                                int max = -1;
-                                Path maxPath = null;
-                                for (Path path : allPaths) {
-                                    if (path.getWeightFreq().get(maxFreqWeight) != null && path.getWeightFreq().get(maxFreqWeight) > max) {
-                                        max = path.getWeightFreq().get(maxFreqWeight);
-                                        maxPath = path;
-                                    }
-                                }
-
-                                network.reducePath(maxPath);
-                                paths.add(maxPath);
-                                numPaths++;
+                            //if greedy edge fails, just use regular greedy
+                            toRemoveList = null;
+                            if(toRemoveList == null) {
+                                toRemoveList = greedyWidth(network1a);
                             }
-                            /**/
+                            paths1.addAll(toRemoveList);
 
-                            // Remove from beginning
-                            /**/
-                            ArrayList<Integer> valK = network.ValsToEnd();
-                            Collections.sort(valK);
-                            Collections.reverse(valK);
+                            //removeStart -> greedy
+                            Network network2 = new Network(network);
+                            ArrayList<Path> paths2 = new ArrayList<>();
 
-                            for (int k : valK) {
-                                Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                if (newPath == null) {
-                                    network = copy;
-                                    valK = network.ValsFromZero();
-                                    Collections.sort(valK);
-                                    Collections.reverse(valK);
-                                    numPaths = 0;
-                                    break;
+                            toRemoveList = removeFromStart(network2);
+                            if(toRemoveList != null) {
+                                paths2.addAll(toRemoveList);
+                                for(Path p: toRemoveList) {
+                                    network2.reducePath(p);
                                 }
-                                paths.add(newPath);
-                                network.reducePath(newPath);
-                                numPaths++;
                             }
-                            /**/
 
-                            //remove from end
-                            /*
-                            for(int k: valK){
-                                Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                if(newPath == null){
-                                    network = copy2;
-                                    valK = network.ValsToEnd();
-                                    Collections.sort(valK);
-                                    Collections.reverse(valK);
-                                    numPaths = 0;
-                                    break;
+                            toRemoveList = greedyWidth(network2);
+                            paths2.addAll(toRemoveList);
+                            for(Path p: toRemoveList) {
+                                network2.reducePath(p);
+                            }
+
+                            //maxFreq -> greedy
+                            Network network3 = new Network(network);
+                            ArrayList<Path> paths3 = new ArrayList<>();
+                            toRemove = removeMaxFreq(network3);
+                            if(toRemove != null) {
+                                paths3.add(toRemove);
+                                network3.reducePath(toRemove);
+                            }
+
+                            toRemoveList = greedyWidth(network3);
+                            paths3.addAll(toRemoveList);
+
+                            //greedy only
+                            Network network4 = new Network(network);
+                            ArrayList<Path> paths4 = new ArrayList<>();
+                            toRemoveList = greedyWidth(network4);
+                            paths4.addAll(toRemoveList);
+
+                            //pick whichever method works better
+                            int[] pathSizes = {paths1.size(), paths2.size(), paths3.size(), paths4.size()};
+                            Network[] networkList = {network1, network2, network3, network4};
+                            ArrayList<ArrayList<Path>> pathList = new ArrayList<>();
+                            pathList.add(paths1);
+                            pathList.add(paths2);
+                            pathList.add(paths3);
+                            pathList.add(paths4);
+
+                            int minSize = -1;
+                            int minSizeIndex = -1;
+                            for(int i = 0; i < pathSizes.length; i++) {
+                                if(pathSizes[i] < minSize || minSize < 0) {
+                                    minSize = pathSizes[i];
+                                    minSizeIndex = i;
+                                    methodUsage[i]++;
                                 }
-
-                                paths.add(newPath);
-                                network.reducePath(newPath);
-                                numPaths++;
                             }
-                            /**/
 
-                            //greedy-width
-                            while(network.numEdges() > 0) {
-                                Path selectedPath = findFattestPath(network);
-                                network.reducePath(selectedPath);
-                                paths.add(selectedPath);
-                                numPaths++;
-                            }
+                            Network selectedNetwork = networkList[minSizeIndex];
+                            ArrayList<Path> selectedPath = pathList.get(minSizeIndex);
 
                             //print results
                             int truthPaths = numTruthPaths.get(count);
+                            int numPaths = selectedPath.size();
+                            //network.printDOT("graph.dot");
+                            //network.printDOT("paths.dot", selectedPath);
+                            //System.out.println(Arrays.toString(pathSizes));
+                            for(Path p: selectedPath) {
+                                //System.out.println(p.toString());
+                            }
                             out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
-                            origNetwork.printDOT("graph3.dot", paths);
-                            System.out.println(paths.toString());
+                            //network.printDOT("graph3.dot", selectedPath);
                             if(numPaths <= truthPaths) {
                                 resultBins[truthPaths-1]++;
                             }
@@ -182,7 +162,98 @@ public class Main {
                 System.out.printf("%d\t\t%.2f\n", i+1, successRate);
             }
 
+            System.out.println("Method Usage:");
+            String[] names = {"Greedy Edge Removal", "Remove Start -> Greedy", "Max Freq -> Greedy", "Greedy Only"};
+            int total = 0;
+            for(int i = 0; i < 4; i++) total += methodUsage[i];
+            for(int i = 0; i < 4; i++) {
+                System.out.printf("%s: %.2f\n", names[i], ((double)methodUsage[i]/(double)total * 100));
+            }
+
         }
+    }
+
+    private static Path removeMaxFreq(Network network) {
+        if(network.numNodes() < 30) { //get all paths only works on smaller graphs
+            //find weight that appears on the most edges
+            HashMap<Integer, Integer> frequencies = new HashMap<>();
+            ArrayList<Edge> edges = network.getEdges();
+            for (Edge e : edges) {
+                int weight = e.getWeight();
+                if (frequencies.get(weight) == null) {
+                    frequencies.put(weight, 1);
+                } else {
+                    int oldFreq = frequencies.get(weight);
+                    frequencies.put(weight, oldFreq + 1);
+                }
+            }
+
+            int maxFreqWeight = -1;
+            int maxFreq = -1;
+            for (Map.Entry entry : frequencies.entrySet()) {
+                if ((int) entry.getValue() > maxFreq) {
+                    maxFreq = (int) entry.getValue();
+                    maxFreqWeight = (int) entry.getKey();
+                }
+            }
+
+            //find the path that has the largest concentration of edges with the
+            //max-frequency weight
+            ArrayList<Path> allPaths = getAllPaths(network);
+            int max = -1;
+            Path maxPath = null;
+            for (Path path : allPaths) {
+                if (path.getWeightFreq().get(maxFreqWeight) != null && path.getWeightFreq().get(maxFreqWeight) > max) {
+                    max = path.getWeightFreq().get(maxFreqWeight);
+                    maxPath = path;
+                }
+            }
+
+            network.reducePath(maxPath);
+            return maxPath;
+        }
+        return null;
+    }
+
+    private static ArrayList<Path> removeFromStart(Network network) {
+        ArrayList<Integer> valK = network.ValsToEnd();
+        Collections.sort(valK);
+        Collections.reverse(valK);
+        ArrayList<Path> pathsToRemove = new ArrayList<>();
+        ArrayList<Integer> sortedNodes = network.topoSort();
+
+        for (int k : valK) {
+            Path newPath = findMaxPath(network, k, sortedNodes);
+            if (newPath == null) {
+                valK = network.ValsFromZero();
+                Collections.sort(valK);
+                Collections.reverse(valK);
+                return null;
+            }
+            pathsToRemove.add(newPath);
+        }
+
+        return pathsToRemove;
+    }
+
+    private static ArrayList<Path> greedyWidth(Network network) {
+        ArrayList<Path> paths = new ArrayList<>();
+       // System.out.println(network.toString());
+        int x = 0;
+        while(network.numEdges() > 0) {
+            Path selectedPath = findFattestPath(network);
+            if(selectedPath.getWeight() < 0) break;
+            paths.add(selectedPath);
+
+            ArrayList<Path> singlePathList = new ArrayList<>();
+            singlePathList.add(selectedPath);
+            //network.printDOT("greedy"+x+".dot", singlePathList);
+
+            network.reducePath(selectedPath);
+            x++;
+        }
+
+        return paths;
     }
 
     private static Path findFattestPath(Network network) {
@@ -227,6 +298,69 @@ public class Main {
         //System.out.println(pathEdges.toString());
 
         return new Path(pathEdges);
+    }
+
+    /**
+     * Returns a list of the 3 highest-flow paths in the network
+     */
+    private static ArrayList<Path> greedySelect(Network network) {
+        Network tempNetwork = new Network(network);
+        ArrayList<Path> paths = new ArrayList<>();
+        while(tempNetwork.numEdges() > 0) {
+            Path selectedPath = findFattestPath(tempNetwork);
+            if(selectedPath.getWeight() < 0) break;
+            paths.add(selectedPath);
+            tempNetwork.reducePath(selectedPath);
+        }
+
+        return paths;
+    }
+
+    private static ArrayList<Path> greedyEdgeRemove(Network network) {
+        ArrayList<Path> paths = new ArrayList<>();
+
+        while(network.numEdges() > 0) {
+            int maxEdgeCount = -1;
+            Path pathToRemove = null;
+            ArrayList<Path> pathsToCheck = greedySelect(network);
+            for (Path p : pathsToCheck) {
+                int flow = p.getWeight();
+                int edgeCount = 0;
+                for (Edge e : p.getEdges()) {
+                    if (e.getWeight() <= flow) {
+                        edgeCount++;
+                    }
+                }
+
+               // System.out.println(edgeCount);
+
+                if (edgeCount > maxEdgeCount) {
+                    maxEdgeCount = edgeCount;
+                    pathToRemove = p;
+                }
+
+            }
+
+            if(pathToRemove == null) {
+                return null;
+            }
+
+            //Convert path edges to network edges
+            ArrayList<Edge> newEdges = new ArrayList<>();
+            for(Edge e: pathToRemove.getEdges()) {
+                Edge newEdge = network.findEdgeById(e.getId());
+                newEdges.add(newEdge);
+            }
+
+            pathToRemove = new Path(newEdges);
+
+            //System.out.println(pathToRemove);
+            network.reducePath(pathToRemove);
+            //System.out.println(network.numEdges());
+            paths.add(pathToRemove);
+        }
+
+        return paths;
     }
 
     /**
@@ -339,7 +473,7 @@ public class Main {
      * @param k
      * @return length of the path (# of nodes, not weight)
      */
-    public static Path findMaxPath(Network network, int k, ArrayList<Integer> sortedNodes, PrintWriter out) {
+    public static Path findMaxPath(Network network, int k, ArrayList<Integer> sortedNodes) {
 
         int[] lengths = new int[network.numNodes()];
         Edge[] selectedEdges = new Edge[network.numNodes()];

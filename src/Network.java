@@ -54,6 +54,7 @@ public class Network {
 
     public void reducePath(Path toReduce) {
         int pathWeight = toReduce.getWeight();
+        //System.out.println("# Edges: " + numEdges());
         for(Edge e: toReduce.getEdges()) {
             int weight = e.getWeight();
             if(weight - pathWeight <= 0) {
@@ -64,6 +65,8 @@ public class Network {
                 //System.out.println(e.toString());
             }
         }
+
+        //System.out.println("# Edges Remaining: " + numEdges());
     }
 
     /**
@@ -127,20 +130,24 @@ public class Network {
         return fromNode.findOutgoingEdge(toNode);
     }
 
+    public Edge findEdgeById(int id) {
+        for(Edge e: edges) {
+            if(e.getId() == id) {
+                return e;
+            }
+        }
+
+        return null;
+    }
+
     public ArrayList getNodes(){ return nodes; }
     public ArrayList getEdges(){ return edges; }
 
     public void removeEdge(Edge e) {
-        //remove from network edges list
         edges.remove(e);
-
-        //remove from outgoing edge list (in node)
         e.getFromNode().removeOutgoingEdge(e);
-
-        //remove from incoming edge list (in node)
         e.getToNode().removeIncomingEdge(e);
     }
-
 
     public void removeNode(Node node) {
         Node fromNode = node.getFromNodes().get(0);
@@ -348,35 +355,42 @@ public class Network {
         File outputFile = new File(filename);
         PrintWriter out = null;
         String[] colors = {"green", "blue", "yellow", "purple", "pink", "orange", "navy", "aquamarine", "cyan", "lightsteelblue1"};
-        HashMap<Integer, String> edgeColors = new HashMap<>();
 
         try {
             out = new PrintWriter(outputFile);
 
             out.println("digraph G {");
 
-            //initially set all edges to black
+            HashMap<Edge, int[]> edgeInfo = new HashMap<>();
+            HashMap<Integer, Integer> edgeCounts = new HashMap<>();
+
             for(Edge e: edges) {
-                edgeColors.put(e.getId(), "black");
+                int fromNodeId = e.getFromNode().getId();
+                int toNodeId = e.getToNode().getId();
+                int weight = e.getWeight();
+                int[] info = {0, 0};
+                edgeInfo.put(e, info);
+                edgeCounts.put(e.getId(), 0);
             }
 
-            int i = 0;
             for(Path p: paths) {
-                String color;
-                if(i > 9) color = "red";
-                else color = colors[i];
-                //System.out.println(color);
-
-                for(Edge e: p.getEdges()) {
-                    edgeColors.put(e.getId(), color);
-                    //System.out.println(e.toString());
-                    int fromNodeId = e.getFromNode().getId();
-                    int toNodeId = e.getToNode().getId();
-                    int weight = e.getWeight();
-                    out.printf("\t%d -> %d [label=\"%d\", color=\"%s\"]\n", fromNodeId, toNodeId, weight, color);
+                for(Edge e : p.getEdges()) {
+                    int count = edgeCounts.get(e.getId()) + 1;
+                    edgeCounts.put(e.getId(), count);
                 }
+            }
 
-                i++;
+            for(Map.Entry<Edge, int[]> info: edgeInfo.entrySet()) {
+                Edge e = info.getKey();
+
+                String color = "red";
+                if(info.getValue()[0] < 10) color = colors[info.getValue()[0]];
+                int count = edgeCounts.get(e.getId());
+                double size = (double) count / 2;
+                int fromNodeId = e.getFromNode().getId();
+                int toNodeId = e.getToNode().getId();
+                int weight = e.getWeight();
+                out.printf("\t%d -> %d [label=\"%d\", color=\"%s\", penwidth=\"%.1f\"]\n", fromNodeId, toNodeId, weight, color, size);
             }
 
             out.println("}");
