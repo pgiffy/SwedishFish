@@ -36,6 +36,20 @@ public class Node {
         else toReduce.setWeight(toReduce.getWeight()-reduceWeight);
     }
 
+    public Edge bestEdge(){
+        Edge strongest = null;
+        int bestFlow = 0;
+        for(Edge e: outgoingEdges){
+            ArrayList<Integer> holder = e.getPaths();
+            if(!holder.isEmpty() && Collections.max(holder) > bestFlow){
+                strongest = e;
+                bestFlow = Collections.max(holder);
+            }
+        }
+
+        return strongest;
+    }
+
     public void addPossible(int possible){ possibleFlows.add(possible); }
     public void addAllPossible(ArrayList<Integer> possible){possibleFlows.addAll(possible);}
     public void removePossible(int remove){ possibleFlows.remove(new Integer(remove)); }

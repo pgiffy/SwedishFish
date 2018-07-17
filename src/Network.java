@@ -1,5 +1,6 @@
 import java.io.PrintWriter;
 import java.util.*;
+import java.io.*;
 public class Network {
 
     private ArrayList<Edge> edges;
@@ -111,12 +112,12 @@ public class Network {
         return nodes.get(id);
     }
 
-    public Edge getEdge(Node fromNode, Node toNode){
-        return fromNode.findOutgoingEdge(toNode);
-    }
+    public Edge getEdge(Node fromNode, Node toNode){ return fromNode.findOutgoingEdge(toNode); }
 
-    public ArrayList getNodes(){ return nodes; }
-    public ArrayList getEdges(){ return edges; }
+    public Edge getEdge(Edge e){ return e.getFromNode().findOutgoingEdge(e.getToNode()); }
+
+    public ArrayList<Node> getNodes(){ return nodes; }
+    public ArrayList<Edge> getEdges(){ return edges; }
 
     public void removeEdge(Edge e) {
         //remove from network edges list
@@ -178,7 +179,6 @@ public class Network {
     }
 
     public void collapseEdges() {
-        ArrayList<Node> toRemove = new ArrayList<>();
         for(Node node: nodes) {
             if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
                 removeNode(node);
@@ -200,7 +200,72 @@ public class Network {
         nodes = tempNodes;
     }
 
+    public void collapseEdges2(){
+        for(Node node: nodes){
+            ArrayList<Integer> weightIncoming = new ArrayList<>();
+            ArrayList<Integer> weightOutgoing = new ArrayList<>();
+            for(Edge e: node.getOutgoingEdges()) weightOutgoing.add(e.getWeight());
+            for(Edge e: node.getIncomingEdges()) weightIncoming.add(e.getWeight());
+            if(compareEdges(weightIncoming, weightOutgoing)) removeNodes2(node);
+        }
 
+        int i = 0;
+        ArrayList<Node> tempNodes = new ArrayList<>();
+        tempNodes.addAll(nodes);
+        for(Node n: nodes) {
+            if(n.numOutgoingEdges() == 0 && n.numIncomingEdges() == 0) {
+                tempNodes.remove(n);
+            } else {
+                n.setId(i);
+                i++;
+            }
+        }
+        nodes = tempNodes;
+    }
+
+    public void removeNodes2(Node node){
+        ArrayList<Edge> eToRemove = new ArrayList<>();
+        ArrayList<Edge> jToRemove = new ArrayList<>();
+        boolean checker = false;
+        for(Edge e: node.getIncomingEdges()){
+            for(Edge j: node.getOutgoingEdges()){
+                if(e.getWeight() == j.getWeight()){
+                    checker = true;
+                    Node fromNode = e.getFromNode();
+                    Node toNode = j.getToNode();
+                    int weight = e.getWeight();
+                    addEdge(fromNode, toNode, weight);
+                    eToRemove.add(e);
+                    jToRemove.add(j);
+                    break;
+                }
+            }
+            if(checker){
+                checker = false;
+                for(Edge j: jToRemove) removeEdge(j);
+                jToRemove.clear();
+                continue;
+            }
+        }
+        for(Edge e: eToRemove) removeEdge(e);
+
+    }
+
+    public boolean compareEdges(ArrayList<Integer> list1, ArrayList<Integer> list2)
+    {
+        //null checking
+        if(list1==null && list2==null) return true;
+        if((list1 == null && list2 != null) || (list1 != null && list2 == null)) return false;
+
+        if(list1.size()!=list2.size()) return false;
+
+        for(Integer itemList1: list1)
+        {
+            if(!list2.contains(itemList1)) return false;
+        }
+
+        return true;
+    }
 
 
     private void findMatchingEdges(ArrayList<Edge> removedEdges) {
@@ -317,4 +382,23 @@ public class Network {
         return edgeWeight;
     }
 
+    public void breakItDown(){
+        for(int currentNode: topoSort()){
+            if(getNode(currentNode).numIncomingEdges() > 1 && getNode(currentNode).numOutgoingEdges() == 1){
+                Node newEnd = getNode(currentNode).getOutgoingEdges().get(0).getToNode();
+                removeEdge(getNode(currentNode).getOutgoingEdges().get(0));
+                for(Edge e: getNode(currentNode).getIncomingEdges()){
+                    addEdge(getNode(currentNode),newEnd, e.getWeight());
+                }
+            }
+            if(getNode(currentNode).numIncomingEdges() == 1 && getNode(currentNode).numOutgoingEdges() > 1){
+                Node newEnd = getNode(currentNode).getIncomingEdges().get(0).getFromNode();
+                removeEdge(getNode(currentNode).getIncomingEdges().get(0));
+                for(Edge e: getNode(currentNode).getOutgoingEdges()){
+                    addEdge(newEnd , getNode(currentNode), e.getWeight());
+                }
+            }
+        }
+
+    }
 }

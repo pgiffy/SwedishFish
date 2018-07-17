@@ -22,6 +22,22 @@ public class Path {
         weightFreqCalc();
     }
 
+    public Path(ArrayList<Edge> newEdges, int k) {
+        edges = new ArrayList<>();
+        flow = k;
+        int minWeight = -1;
+        for(Edge e: newEdges) {
+            edges.add(e);
+            if(e.getWeight() < minWeight || minWeight < 0) {
+                minWeight = e.getWeight();
+            }
+        }
+
+        weight = minWeight;
+        area = weight * edges.size();
+    }
+
+
     private void weightFreqCalc() {
         weightFreq = new HashMap<>();
         for(Edge e: edges) {
@@ -50,6 +66,11 @@ public class Path {
         }
 
         return maxWeight;
+    }
+
+    public void setWeight(int weightNew){
+        weight = weightNew;
+        flow = weightNew;
     }
 
     public ArrayList<Edge> getEdges() {

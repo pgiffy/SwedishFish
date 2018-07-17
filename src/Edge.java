@@ -1,8 +1,10 @@
+import java.util.*;
 public class Edge {
     private int weight;
     private Node toNode;
     private Node fromNode;
     private int count;
+    private ArrayList<Integer> paths = new ArrayList<>();
 
     public Edge(Node FromNode, Node ToNode, int edgeWeight) {
         weight = edgeWeight;
@@ -10,6 +12,13 @@ public class Edge {
         fromNode = FromNode;
     }
 
+    public void removePossible(int remove){ paths.remove(new Integer(remove)); }
+
+    public void addPath(int flow){ paths.add(flow); }
+
+    public void addAllPaths(ArrayList<Integer> flows){ paths.addAll(flows); }
+
+    public ArrayList<Integer> getPaths(){ return paths; }
 
     public void incrementCount() {
         count++;
