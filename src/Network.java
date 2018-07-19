@@ -5,7 +5,7 @@ public class Network {
 
     private ArrayList<Edge> edges;
     private ArrayList<Node> nodes;
-
+    static ArrayList<ArrayList<Integer>> allSubsets = new ArrayList<>();
     public Network() {
         edges = new ArrayList<>();
         nodes = new ArrayList<>();
@@ -279,8 +279,13 @@ public class Network {
         if (list1.size() != list2.size()) return false;
 
         for (Integer itemList1 : list1) {
-            if (!list2.contains(itemList1)) return false;
+            if (!list2.contains(itemList1)){
+                return false;
+            }else{
+                list2.remove(new Integer(itemList1));
+            }
         }
+
 
         return true;
     }
@@ -316,6 +321,7 @@ public class Network {
 
     }
     public void uglyBanana(){
+        //finds matching incoming and outgoing edges of a node
         for(int currentNode: topoSort()){
             ArrayList<Integer> incoming = new ArrayList<>();
             ArrayList<Integer> outgoing = new ArrayList<>();
@@ -362,13 +368,187 @@ public class Network {
         }
     }
     private static ArrayList<Integer> removeDuplicates(ArrayList<Integer> remove){
-
         Set<Integer> noDuplicate = new HashSet<>();
         noDuplicate.addAll(remove);
         remove.clear();
         remove.addAll(noDuplicate);
         return remove;
     }
+
+    public void subsetGod(){
+        //calculate subsets for pairs of paths that the incoming or outgoing edges are at least double
+        //compare sets to work
+        for(int i: topoSort()){
+            if(getNode(i).getOutgoingEdges().size() == 2 && getNode(i).getOutgoingEdges().size()*2 <= getNode(i).getIncomingEdges().size()){
+                ArrayList <Integer> incomingWeights = new ArrayList<>();
+                ArrayList<ArrayList<Integer>> one;
+                ArrayList<ArrayList<Integer>> two;
+                for(Edge e: getNode(i).getIncomingEdges()) incomingWeights.add(e.getWeight());
+                int[] arrayIncoming = new int[incomingWeights.size()];
+                for (int j = 0; j < arrayIncoming.length; j++) arrayIncoming[j] = incomingWeights.get(j);
+                int n = arrayIncoming.length;
+                int oneWeight = getNode(i).getOutgoingEdges().get(0).getWeight();
+                int twoWeight = getNode(i).getOutgoingEdges().get(1).getWeight();
+                printAllSubsets(arrayIncoming, n, oneWeight);
+                one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                allSubsets.clear();
+                printAllSubsets(arrayIncoming, n, twoWeight);
+                two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                allSubsets.clear();
+                if(one.isEmpty() && two.isEmpty()) continue;
+                ArrayList<Integer> all = new ArrayList<>();
+                boolean checker = false;
+                ArrayList<Edge> oneEdges = new ArrayList<>();
+                ArrayList<Edge> twoEdges = new ArrayList<>();
+                Node oneEnd = null;
+                Node twoEnd = null;
+                for(ArrayList<Integer> arr1: one){
+                    for(ArrayList<Integer> arr2: two){
+                        all.addAll(arr1);
+                        all.addAll(arr2);
+                        if(compareEdges(all, incomingWeights)){
+                            oneEnd = getNode(i).getOutgoingEdges().get(0).getToNode();
+                            twoEnd = getNode(i).getOutgoingEdges().get(1).getToNode();
+                            //Get all the edges with weights in one and two
+                            for(Edge e : getNode(i).getIncomingEdges()){
+                                if(arr1.contains(new Integer(e.getWeight()))){
+                                    oneEdges.add(e);
+                                    arr1.remove(new Integer(e.getWeight()));
+                                    continue;
+                                }
+                                if(arr2.contains(new Integer(e.getWeight()))){
+                                    twoEdges.add(e);
+                                    arr2.remove(new Integer(e.getWeight()));
+                                    continue;
+                                }
+                            }
+                            checker = true;
+                            break;
+                        }
+                        all.clear();
+
+                    }
+                    if(checker) break;
+                }
+                if(checker == false) continue;
+                ArrayList<Edge> toRemove = new ArrayList<>();
+                toRemove.addAll(getNode(i).getOutgoingEdges());
+                for(Edge e: toRemove) removeEdge(e);
+                toRemove.clear();
+                for(Edge e: oneEdges){
+                    addEdge(e.getFromNode(), oneEnd, e.getWeight());
+                    toRemove.add(e);
+                }
+                for(Edge e: toRemove) removeEdge(e);
+                toRemove.clear();
+                for(Edge e: twoEdges){
+                    addEdge(e.getFromNode(),twoEnd,e.getWeight());
+                    toRemove.add(e);
+                }
+                for(Edge e: toRemove) removeEdge(e);
+                toRemove.clear();
+
+            }
+            if(getNode(i).getIncomingEdges().size() == 2 && getNode(i).getIncomingEdges().size()*2 <= getNode(i).getOutgoingEdges().size()){
+
+            }
+        }
+    }
+
+    static boolean[][] dp;
+
+
+    static void display(ArrayList<Integer> v)
+    {
+        ArrayList<Integer> copy = (ArrayList<Integer>) v.clone();
+        allSubsets.add(copy);
+    }
+
+    // A recursive function to print all subsets with the
+    // help of dp[][]. Vector p[] stores current subset.
+    static void printSubsetsRec(int arr[], int i, int sum,
+                                ArrayList<Integer> p)
+    {
+        ArrayList<ArrayList<Integer>> allSubsets = new ArrayList<>();
+        // If we reached end and sum is non-zero. We print
+        // p[] only if arr[0] is equal to sun OR dp[0][sum]
+        // is true.
+        if (i == 0 && sum != 0 && dp[0][sum])
+        {
+            p.add(arr[i]);
+            display(p);
+            p.clear();
+            return;
+        }
+
+        // If sum becomes 0
+        if (i == 0 && sum == 0)
+        {
+            display(p);
+            p.clear();
+            return;
+        }
+
+        // If given sum can be achieved after ignoring
+        // current element.
+        if (dp[i-1][sum])
+        {
+            // Create a new vector to store path
+            ArrayList<Integer> b = new ArrayList<>();
+            b.addAll(p);
+            printSubsetsRec(arr, i-1, sum, b);
+        }
+
+        // If given sum can be achieved after considering
+        // current element.
+        if (sum >= arr[i] && dp[i-1][sum-arr[i]])
+        {
+            p.add(arr[i]);
+            printSubsetsRec(arr, i-1, sum-arr[i], p);
+        }
+    }
+
+    // Prints all subsets of arr[0..n-1] with sum 0.
+    static void printAllSubsets(int arr[], int n, int sum)
+    {
+        if (n == 0 || sum < 0)
+            return;
+
+        // Sum 0 can always be achieved with 0 elements
+        dp = new boolean[n][sum + 1];
+        for (int i=0; i<n; ++i)
+        {
+            dp[i][0] = true;
+        }
+
+        // Sum arr[0] can be achieved with single element
+        if (arr[0] <= sum)
+            dp[0][arr[0]] = true;
+
+        // Fill rest of the entries in dp[][]
+        for (int i = 1; i < n; ++i)
+            for (int j = 0; j < sum + 1; ++j)
+                dp[i][j] = (arr[i] <= j) ? (dp[i-1][j] ||
+                        dp[i-1][j-arr[i]])
+                        : dp[i - 1][j];
+        if (dp[n-1][sum] == false) return;
+
+
+        // Now recursively traverse dp[][] to find all
+        // paths from dp[n-1][sum]
+        ArrayList<Integer> p = new ArrayList<>();
+        printSubsetsRec(arr, n-1, sum, p);
+    }
+
+    //Driver Program to test above functions
+    public static void main(String args[])
+    {
+        int arr[] = {1, 2, 3, 4, 5};
+        int n = arr.length;
+        int sum = 10;
+        printAllSubsets(arr, n, sum);
+    }
+
 
 }
 

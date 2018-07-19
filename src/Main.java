@@ -38,12 +38,15 @@ public class Main {
                         int count = 0;
                         for (Network network : networks) {
                             network.collapseEdges();
-                            for(int i = 0; i < 5; i++) {
+                            for(int i = 0; i < 10; i++) {
                                 network.breakItDown();
                                 network.collapseEdges2();
                                 network.uglyBanana();
                                 network.collapseEdges2();
+                                network.subsetGod();
+                                network.collapseEdges2();
                             }
+
                             ArrayList<Integer> sortedNodes = network.topoSort();
                             int numPaths = 0;
                             ArrayList<Integer> valK = stackFlow(network);
