@@ -23,7 +23,6 @@ public class Main {
                 for (int i = 0; i < 100; i++) totals[i] = 0;
 
                 for (File curFile : files) {
-
                     int pos = curFile.getName().lastIndexOf(".");
                     String ext = curFile.getName().substring(pos + 1);
                     String filenameNoExt = curFile.getName().substring(0, pos);
@@ -35,45 +34,49 @@ public class Main {
                         for (int num : numTruthPaths) totals[num - 1]++;
 
 
-                        System.out.print("*");
+                        System.out.print("!");
                         int count = 0;
                         for (Network network : networks) {
                             network.collapseEdges();
-                            network.breakItDown();
-                            network.collapseEdges2();
+                            for(int i = 0; i < 5; i++) {
+                                network.breakItDown();
+                                network.collapseEdges2();
+                                network.uglyBanana();
+                                network.collapseEdges2();
+                            }
                             ArrayList<Integer> sortedNodes = network.topoSort();
                             int numPaths = 0;
                             ArrayList<Integer> valK = stackFlow(network);
                             Collections.sort(valK);
                             Collections.reverse(valK);
-                            for (int k : valK) {
+                            int k = valK.get(0);
+                            while (network.numEdges() > 0) {
+                                sortedNodes = network.topoSort();
                                 Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                if (newPath == null) {
-                                    break;
+                                if (newPath == null) break; else {
+                                    network.reducePath(newPath);
+                                    numPaths++;
+                                    network.collapseEdges();
+                                    network.breakItDown();
+                                    network.collapseEdges2();
+                                    network.uglyBanana();
+                                    network.collapseEdges2();
+                                    valK = stackFlow(network);
+                                    Collections.sort(valK);
+                                    Collections.reverse(valK);
+                                    if(valK.isEmpty()) break;
+                                    k = valK.get(0);
                                 }
-                                network.reducePath(newPath);
-                                numPaths++;
                             }
-
                             while(network.numEdges() > 0) {
-
                                 Path selectedPath = findFattestPath(network);
                                 network.reducePath(selectedPath);
-                                //paths.add(selectedPath);
                                 numPaths++;
                             }
-
                             int truthPaths = numTruthPaths.get(count);
-
-                            if(numPaths == 0){
-                                numPaths = 100;
-                            }
-
+                            if(numPaths == 0) numPaths = 100;
                             out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
-                            if (numPaths <= truthPaths) {
-                                resultBins[truthPaths - 1]++;
-                            }
-
+                            if (numPaths <= truthPaths) resultBins[truthPaths - 1]++;
                             count++;
                         }
                     }
@@ -140,14 +143,9 @@ public class Main {
             Edge e = edgesReverse.pop();
             selectedEdges2.add(e);
         }
-
         //out.printf("MAX PATH (Flow %d) = " + Arrays.toString(lengths)+"\n" + Arrays.toString(selectedEdges)+"\n", k);
-
         return new Path(selectedEdges2, k);
-
-
     }
-
 
     private static ArrayList<Integer> stackFlow(Network network){
         ArrayList[] stackHolder = new ArrayList[network.numNodes()];
@@ -158,17 +156,16 @@ public class Main {
             int start = e.getFromNode().getId();
             int end = e.getToNode().getId();
             for(int i = start; i < end; i++) stackHolder[i].add(e.getWeight());
-
         }
         int largestSize = 0;
-        for(int i = 0; i < stackHolder.length; i++){
-            if(stackHolder[i].size()>largestSize){
+        for(int i = 0; i < stackHolder.length; i++) {
+            if(stackHolder[i].size()>largestSize) {
                 largestSize = stackHolder[i].size();
             }
         }
         //holds all the values held by biggest stacks
         ArrayList<ArrayList<Integer>> allBiggest = new ArrayList<>();
-        for(int i = 0; i < stackHolder.length; i++){
+        for(int i = 0; i < stackHolder.length; i++) {
             if(stackHolder[i].size() == largestSize){
                 allBiggest.add(stackHolder[i]);
             }
@@ -378,79 +375,6 @@ public class Main {
         }
         return subset[sum][n];
     }
-/*static void printSubsetsRec(int arr[], int i, int sum, ArrayList<Integer> p)
-    {
-        // If we reached end and sum is non-zero. We print
-        // p[] only if arr[0] is equal to sun OR dp[0][sum]
-        // is true.
-        if (i == 0 && sum != 0 && dp[0][sum])
-        {
-            p.add(arr[i]);
-            addVals(p);
-            p.clear();
-            return;
-        }
-
-        // If sum becomes 0
-        if (i == 0 && sum == 0)
-        {
-            addVals(p);
-            p.clear();
-            return;
-        }
-
-        // If given sum can be achieved after ignoring
-        // current element.
-        if (dp[i-1][sum])
-        {
-            // Create a new vector to store path
-            ArrayList<Integer> b = new ArrayList<>();
-            b.addAll(p);
-            printSubsetsRec(arr, i-1, sum, b);
-        }
-
-        // If given sum can be achieved after considering
-        // current element.
-        if (sum >= arr[i] && dp[i-1][sum-arr[i]])
-        {
-            p.add(arr[i]);
-            printSubsetsRec(arr, i-1, sum-arr[i], p);
-        }
-    }
-
-    // Prints all subsets of arr[0..n-1] with sum 0.
-    static void printAllSubsets(int arr[], int n, int sum)
-    {
-        if (n == 0 || sum < 0)
-            return;
-
-        // Sum 0 can always be achieved with 0 elements
-        dp = new boolean[n][sum + 1];
-        for (int i=0; i<n; ++i)
-        {
-            dp[i][0] = true;
-        }
-
-        // Sum arr[0] can be achieved with single element
-        if (arr[0] <= sum)
-            dp[0][arr[0]] = true;
-
-        // Fill rest of the entries in dp[][]
-        for (int i = 1; i < n; ++i)
-            for (int j = 0; j < sum + 1; ++j)
-                dp[i][j] = (arr[i] <= j) ? (dp[i-1][j] ||
-                        dp[i-1][j-arr[i]])
-                        : dp[i - 1][j];
-        if (dp[n-1][sum] == false)
-        {
-            //System.out.println("There are no subsets with sum " + sum);
-            return;
-        }
-        // Now recursively traverse dp[][] to find all
-        // paths from dp[n-1][sum]
-        ArrayList<Integer> p = new ArrayList<>();
-        printSubsetsRec(arr, n-1, sum, p);
-    }*/
 
 
     public static Path random(Network network){
@@ -470,129 +394,6 @@ public class Main {
         return randomPath;
     }
 
-    public static ArrayList<Integer> shortTerm(Network network, ArrayList<Integer> sortedNodes) {
-
-        int numPaths = 0;
-        ArrayList<Integer> possibleVals = network.getAllEdgeWeight();
-        network.getNode(0).addAllPossible(possibleVals);
-        //System.out.println(network.toString());
-        for(int node = 0; node < sortedNodes.size(); node++){
-            ArrayList<Integer> valsToUse = network.getNode(node).getPossible();
-            for(Edge e: network.getNode(node).getOutgoingEdges()){
-                int weight = e.getWeight();
-                int[] vals = new int[valsToUse.size()];
-                for(int i= 0; i < valsToUse.size(); i++){
-                    vals[i] = valsToUse.get(i);
-                }
-                int length = vals.length;
-
-                //assigns the possible paths to nodes
-                findTargetSumSubsets(vals, weight, "", 0);
-                for (String str: allSubsets) {
-                    String[] strArray = str.split(" ");
-                    int[] intArray = new int[strArray.length];
-                    for(int i = 0; i < strArray.length; i++) {
-                        intArray[i] = Integer.parseInt(strArray[i]);
-                    }
-                    for(int i: intArray) {
-
-                        if (!e.getToNode().getPossible().contains(i)) {
-                            e.getToNode().addPossible(i);
-                            e.addPath(i);
-                        }
-                    }
-                    //System.out.println(e.getPaths());
-                }
-                allSubsets.clear();
-            }
-
-        }
-
-        //ArrayList<Integer> solution = network.getNode(network.numNodes() - 1).getPossible();
-
-        /*for(int node: sortedNodes){
-
-            ArrayList<Integer> toRemove = new ArrayList<>();
-            for(int val: network.getNode(node).getPossible()){
-                if(!solution.contains(val)){
-                    toRemove.add(val);
-                }
-            }
-            for(int i: toRemove) {
-                network.getNode(node).removePossible(i);
-            }
-           // System.out.println(node);
-            //System.out.println(network.getNode(node).getPossible());
-        }*/
-
-        /*for(Edge e: network.getEdges()){
-
-            ArrayList<Integer> toRemove = new ArrayList<>();
-            for(int val: network.getEdge(e).getPaths()){
-                if(!solution.contains(val)){
-                    toRemove.add(val);
-                }
-            }
-            for(int i: toRemove) {
-                e.removePossible(i);
-            }
-            // System.out.println(node);
-            //System.out.println(network.getNode(node).getPossible());
-        }*/
-
-        //System.out.println(network.getNode(0).getPossible());
-        numPaths = network.getNode(network.numNodes()-1).getPossible().size();
-        return network.getNode(network.numNodes()-1).getPossible();
-    }
-    private static HashSet<String> allSubsets = new HashSet<>();
-
-    /**
-     * The String token
-     */
-    private static final String token = " ";
-    public static void findTargetSumSubsets(int[] input, int target, String ramp, int index) {
-
-        if(index > (input.length - 1)) {
-            if(getSum(ramp) == target) {
-                allSubsets.add(ramp);
-            }
-            return;
-        }
-
-        //First recursive call going ahead selecting the int at the currenct index value
-        findTargetSumSubsets(input, target, ramp + input[index] + token, index + 1);
-        //Second recursive call going ahead WITHOUT selecting the int at the currenct index value
-        findTargetSumSubsets(input, target, ramp, index + 1);
-    }
-
-    /**
-     * A helper Method for calculating the sum from a string of integers
-     *
-     * @param intString the string subset
-     * @return the sum of the string subset
-     */
-    private static int getSum(String intString) {
-        int sum = 0;
-        StringTokenizer sTokens = new StringTokenizer(intString, token);
-        while (sTokens.hasMoreElements()) {
-            sum += Integer.parseInt((String) sTokens.nextElement());
-        }
-        return sum;
-    }
-
-
-    static boolean[][] dp;
-
-
-    static void addVals(ArrayList<Integer> v){
-        toAdd.addAll(v);
-    }
-
-    static void display(ArrayList<Integer> v)
-    {
-        System.out.println(v);
-    }
-
     private static ArrayList<Integer> removeDuplicates(ArrayList<Integer> remove){
 
         Set<Integer> noDuplicate = new HashSet<>();
@@ -601,4 +402,5 @@ public class Main {
         remove.addAll(noDuplicate);
         return remove;
     }
+
 }
