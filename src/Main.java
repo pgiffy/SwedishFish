@@ -38,7 +38,13 @@ public class Main {
                         int count = 0;
                         for (Network network : networks) {
                             network.collapseEdges();
-                            for(int i = 0; i < 10; i++) {
+                            for(int i = 0; i < 7; i++) {
+                                network.breakItDown();
+                                network.collapseEdges2();
+                                network.uglyBanana();
+                                network.collapseEdges2();
+                            }
+                            for(int i = 0; i < 5; i++) {
                                 network.breakItDown();
                                 network.collapseEdges2();
                                 network.uglyBanana();

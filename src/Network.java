@@ -450,7 +450,73 @@ public class Network {
 
             }
             if(getNode(i).getIncomingEdges().size() == 2 && getNode(i).getIncomingEdges().size()*2 <= getNode(i).getOutgoingEdges().size()){
+                ArrayList <Integer> outGoingWeights = new ArrayList<>();
+                ArrayList<ArrayList<Integer>> one;
+                ArrayList<ArrayList<Integer>> two;
+                for(Edge e: getNode(i).getOutgoingEdges()) outGoingWeights.add(e.getWeight());
+                int[] arrayOutgoing = new int[outGoingWeights.size()];
+                for (int j = 0; j < arrayOutgoing.length; j++) arrayOutgoing[j] = outGoingWeights.get(j);
+                int n = arrayOutgoing.length;
+                int oneWeight = getNode(i).getIncomingEdges().get(0).getWeight();
+                int twoWeight = getNode(i).getIncomingEdges().get(1).getWeight();
+                printAllSubsets(arrayOutgoing, n, oneWeight);
+                one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                allSubsets.clear();
+                printAllSubsets(arrayOutgoing, n, twoWeight);
+                two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                allSubsets.clear();
+                if(one.isEmpty() && two.isEmpty()) continue;
+                ArrayList<Integer> all = new ArrayList<>();
+                boolean checker = false;
+                ArrayList<Edge> oneEdges = new ArrayList<>();
+                ArrayList<Edge> twoEdges = new ArrayList<>();
+                Node oneStart = null;
+                Node twoStart = null;
+                for(ArrayList<Integer> arr1: one){
+                    for(ArrayList<Integer> arr2: two){
+                        all.addAll(arr1);
+                        all.addAll(arr2);
+                        if(compareEdges(all, outGoingWeights)){
+                            oneStart = getNode(i).getIncomingEdges().get(0).getFromNode();
+                            twoStart = getNode(i).getIncomingEdges().get(1).getFromNode();
+                            //Get all the edges with weights in one and two
+                            for(Edge e : getNode(i).getOutgoingEdges()){
+                                if(arr1.contains(new Integer(e.getWeight()))){
+                                    oneEdges.add(e);
+                                    arr1.remove(new Integer(e.getWeight()));
+                                    continue;
+                                }
+                                if(arr2.contains(new Integer(e.getWeight()))){
+                                    twoEdges.add(e);
+                                    arr2.remove(new Integer(e.getWeight()));
+                                    continue;
+                                }
+                            }
+                            checker = true;
+                            break;
+                        }
+                        all.clear();
 
+                    }
+                    if(checker) break;
+                }
+                if(checker == false) continue;
+                ArrayList<Edge> toRemove = new ArrayList<>();
+                toRemove.addAll(getNode(i).getIncomingEdges());
+                for(Edge e: toRemove) removeEdge(e);
+                toRemove.clear();
+                for(Edge e: oneEdges){
+                    addEdge(oneStart, e.getToNode(), e.getWeight());
+                    toRemove.add(e);
+                }
+                for(Edge e: toRemove) removeEdge(e);
+                toRemove.clear();
+                for(Edge e: twoEdges){
+                    addEdge(twoStart, e.getToNode() ,e.getWeight());
+                    toRemove.add(e);
+                }
+                for(Edge e: toRemove) removeEdge(e);
+                toRemove.clear();
             }
         }
     }
