@@ -379,7 +379,7 @@ public class Network {
         //calculate subsets for pairs of paths that the incoming or outgoing edges are at least double
         //compare sets to work
         for(int i: topoSort()){
-            if(getNode(i).getOutgoingEdges().size() == 2 && getNode(i).getOutgoingEdges().size()*2 <= getNode(i).getIncomingEdges().size()){
+            if(getNode(i).getOutgoingEdges().size() == 2 && getNode(i).getOutgoingEdges().size() < getNode(i).getIncomingEdges().size()){
                 ArrayList <Integer> incomingWeights = new ArrayList<>();
                 ArrayList<ArrayList<Integer>> one;
                 ArrayList<ArrayList<Integer>> two;
@@ -449,7 +449,7 @@ public class Network {
                 toRemove.clear();
 
             }
-            if(getNode(i).getIncomingEdges().size() == 2 && getNode(i).getIncomingEdges().size()*2 <= getNode(i).getOutgoingEdges().size()){
+            if(getNode(i).getIncomingEdges().size() == 2 && getNode(i).getIncomingEdges().size() < getNode(i).getOutgoingEdges().size()){
                 ArrayList <Integer> outGoingWeights = new ArrayList<>();
                 ArrayList<ArrayList<Integer>> one;
                 ArrayList<ArrayList<Integer>> two;
