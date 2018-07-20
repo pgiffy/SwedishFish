@@ -64,13 +64,40 @@ public class Main {
                             while (network.numEdges() > 0) {
                                 sortedNodes = network.topoSort();
                                 Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                if (newPath == null) break; else {
+                                if (newPath == null) {
+                                    Path selectedPath = findFattestPath(network);
+                                    network.reducePath(selectedPath);
+                                    numPaths++;
+                                    for(int i = 0; i < 5; i++) {
+                                        network.collapseEdges();
+                                        network.breakItDown();
+                                        network.collapseEdges2();
+                                        network.uglyBanana();
+                                        network.collapseEdges2();
+                                        network.subsetGod3();
+                                        network.collapseEdges2();
+                                        network.subsetGod2();
+                                        network.collapseEdges2();
+                                        network.breakItDown();
+                                        network.collapseEdges2();
+                                    }
+                                    valK = stackFlow(network);
+                                    Collections.sort(valK);
+                                    Collections.reverse(valK);
+                                    k = valK.get(0);
+                                }else{
                                     network.reducePath(newPath);
                                     numPaths++;
                                     network.collapseEdges();
                                     network.breakItDown();
                                     network.collapseEdges2();
                                     network.uglyBanana();
+                                    network.collapseEdges2();
+                                    network.subsetGod3();
+                                    network.collapseEdges2();
+                                    network.subsetGod2();
+                                    network.collapseEdges2();
+                                    network.breakItDown();
                                     network.collapseEdges2();
                                     valK = stackFlow(network);
                                     Collections.sort(valK);
@@ -83,6 +110,19 @@ public class Main {
                                 Path selectedPath = findFattestPath(network);
                                 network.reducePath(selectedPath);
                                 numPaths++;
+                                for(int i = 0; i < 5; i++) {
+                                    network.collapseEdges();
+                                    network.breakItDown();
+                                    network.collapseEdges2();
+                                    network.uglyBanana();
+                                    network.collapseEdges2();
+                                    network.subsetGod3();
+                                    network.collapseEdges2();
+                                    network.subsetGod2();
+                                    network.collapseEdges2();
+                                    network.breakItDown();
+                                    network.collapseEdges2();
+                                }
                             }
                             int truthPaths = numTruthPaths.get(count);
                             if(numPaths == 0) numPaths = 100;
