@@ -49,7 +49,9 @@ public class Main {
                                 network.collapseEdges2();
                                 network.uglyBanana();
                                 network.collapseEdges2();
-                                network.subsetGod();
+                                network.subsetGod3();
+                                network.collapseEdges2();
+                                network.subsetGod2();
                                 network.collapseEdges2();
                             }
 
