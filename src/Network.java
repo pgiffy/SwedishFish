@@ -351,46 +351,22 @@ public class Network {
         }
     }
 
-    public void printDOT(String filename, ArrayList<Path> paths) {
+    public void printDOT(String filename, ArrayList<Edge> pathEdges) {
         File outputFile = new File(filename);
         PrintWriter out = null;
-        String[] colors = {"green", "blue", "yellow", "purple", "pink", "orange", "navy", "aquamarine", "cyan", "lightsteelblue1"};
 
         try {
             out = new PrintWriter(outputFile);
 
             out.println("digraph G {");
 
-            HashMap<Edge, int[]> edgeInfo = new HashMap<>();
-            HashMap<Integer, Integer> edgeCounts = new HashMap<>();
-
             for(Edge e: edges) {
                 int fromNodeId = e.getFromNode().getId();
                 int toNodeId = e.getToNode().getId();
                 int weight = e.getWeight();
-                int[] info = {0, 0};
-                edgeInfo.put(e, info);
-                edgeCounts.put(e.getId(), 0);
-            }
-
-            for(Path p: paths) {
-                for(Edge e : p.getEdges()) {
-                    int count = edgeCounts.get(e.getId()) + 1;
-                    edgeCounts.put(e.getId(), count);
-                }
-            }
-
-            for(Map.Entry<Edge, int[]> info: edgeInfo.entrySet()) {
-                Edge e = info.getKey();
-
-                String color = "red";
-                if(info.getValue()[0] < 10) color = colors[info.getValue()[0]];
-                int count = edgeCounts.get(e.getId());
-                double size = (double) count / 2;
-                int fromNodeId = e.getFromNode().getId();
-                int toNodeId = e.getToNode().getId();
-                int weight = e.getWeight();
-                out.printf("\t%d -> %d [label=\"%d\", color=\"%s\", penwidth=\"%.1f\"]\n", fromNodeId, toNodeId, weight, color, size);
+                String color = "black";
+                if(pathEdges.contains(e)) color = "red";
+                out.printf("\t%d -> %d [label=\"%d\", color=\"%s\"]\n", fromNodeId, toNodeId, weight, color);
             }
 
             out.println("}");
