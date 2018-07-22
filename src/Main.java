@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String args[]) {
 
-        String directory = "/home/peter/Desktop/instances/rnaseq";
+        String directory = "/Users/Peter/Desktop/instances/rnaseq";
 
         ArrayList<Network> networks;
             PrintWriter out = null;
