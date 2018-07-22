@@ -1024,15 +1024,5 @@ public class Network {
         printSubsetsRec(arr, n-1, sum, p);
     }
 
-    //Driver Program to test above functions
-    public static void main(String args[])
-    {
-        int arr[] = {1, 2, 3, 4, 5};
-        int n = arr.length;
-        int sum = 10;
-        printAllSubsets(arr, n, sum);
-    }
-
-
 }
 
