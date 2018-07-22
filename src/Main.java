@@ -17,7 +17,7 @@ public class Main {
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
 
-                File dir = new File(directory + "/human");
+                File dir = new File(directory + "/zebrafish");
                 File[] files = dir.listFiles();
                 for (int i = 0; i < 100; i++) resultBins[i] = 0;
                 for (int i = 0; i < 100; i++) totals[i] = 0;
@@ -28,16 +28,13 @@ public class Main {
                     String filenameNoExt = curFile.getName().substring(0, pos);
                     String filename = curFile.getName();
                     if (ext.equals("graph")) {
-                        networks = readGraphFile(directory + "/human/" + filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/human/" + filenameNoExt + ".truth");
-
+                        networks = readGraphFile(directory + "/zebrafish/" + filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/zebrafish/" + filenameNoExt + ".truth");
                         for (int num : numTruthPaths) totals[num - 1]++;
-
-
                         System.out.print("!");
                         int count = 0;
                         for (Network network : networks) {
-                            network.collapseEdges();
+                            network.collapseEdges2();
                             for(int i = 0; i < 7; i++) {
                                 network.breakItDown();
                                 network.collapseEdges2();
@@ -54,8 +51,7 @@ public class Main {
                                 network.subsetGod2();
                                 network.collapseEdges2();
                             }
-
-                            ArrayList<Integer> sortedNodes = network.topoSort();
+                            ArrayList<Integer> sortedNodes;
                             int numPaths = 0;
                             ArrayList<Integer> valK = stackFlow(network);
                             Collections.sort(valK);
@@ -68,8 +64,8 @@ public class Main {
                                     Path selectedPath = findFattestPath(network);
                                     network.reducePath(selectedPath);
                                     numPaths++;
-                                    for(int i = 0; i < 5; i++) {
-                                        network.collapseEdges();
+                                    network.collapseEdges2();
+                                    for(int i = 0; i < 5 ; i++) {
                                         network.breakItDown();
                                         network.collapseEdges2();
                                         network.uglyBanana();
@@ -88,7 +84,7 @@ public class Main {
                                 }else{
                                     network.reducePath(newPath);
                                     numPaths++;
-                                    network.collapseEdges();
+                                    network.collapseEdges2();
                                     network.breakItDown();
                                     network.collapseEdges2();
                                     network.uglyBanana();
@@ -110,8 +106,8 @@ public class Main {
                                 Path selectedPath = findFattestPath(network);
                                 network.reducePath(selectedPath);
                                 numPaths++;
+                                network.collapseEdges2();
                                 for(int i = 0; i < 5; i++) {
-                                    network.collapseEdges();
                                     network.breakItDown();
                                     network.collapseEdges2();
                                     network.uglyBanana();
@@ -149,8 +145,7 @@ public class Main {
 
     }
 
-
-
+    //finds longest path by edge number
     private static Path findMaxPath(Network network, int k, ArrayList<Integer> sortedNodes, PrintWriter out) {
         int[] lengths = new int[network.numNodes()];
         Edge[] selectedEdges = new Edge[network.numNodes()];
@@ -174,10 +169,8 @@ public class Main {
                 }
             }
         }
-
         int count = 0;
         int i = selectedEdges.length-1;
-        //System.out.println(Arrays.toString(selectedEdges));
         Stack<Edge> edgesReverse = new Stack<>();
         while(i > 0) {
             Edge e = selectedEdges[i];
@@ -199,31 +192,21 @@ public class Main {
     }
 
     private static ArrayList<Integer> stackFlow(Network network){
+        //finds the greatest stack of edges crossing the same point in the set of topologically sorted nodes and their edges
         ArrayList[] stackHolder = new ArrayList[network.numNodes()];
-        for(int i = 0; i < stackHolder.length; i++){
-            stackHolder[i] = new ArrayList<Integer>();
-        }
+        for(int i = 0; i < stackHolder.length; i++) stackHolder[i] = new ArrayList<Integer>();
         for(Edge e: network.getEdges()){
             int start = e.getFromNode().getId();
             int end = e.getToNode().getId();
             for(int i = start; i < end; i++) stackHolder[i].add(e.getWeight());
         }
         int largestSize = 0;
-        for(int i = 0; i < stackHolder.length; i++) {
-            if(stackHolder[i].size()>largestSize) {
-                largestSize = stackHolder[i].size();
-            }
-        }
+        for(int i = 0; i < stackHolder.length; i++) if(stackHolder[i].size()>largestSize) largestSize = stackHolder[i].size();
         //holds all the values held by biggest stacks
         ArrayList<ArrayList<Integer>> allBiggest = new ArrayList<>();
-        for(int i = 0; i < stackHolder.length; i++) {
-            if(stackHolder[i].size() == largestSize){
-                allBiggest.add(stackHolder[i]);
-            }
-        }
+        for(int i = 0; i < stackHolder.length; i++) if(stackHolder[i].size() == largestSize) allBiggest.add(stackHolder[i]);
         // allBiggest now holds all of the greatest size paths.
         if(allBiggest.size() == 1) return allBiggest.get(0);
-
         //this makes it a little better by picking the list with the lowest highest number
         int smallestLargest = 100000000;
         ArrayList<Integer> bestList = new ArrayList<>();
@@ -238,15 +221,6 @@ public class Main {
         return bestList;
 
     }
-
-    //CODE NOT BEING CHANGED CURRENTLY/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //CODE NOT BEING CHANGED CURRENTLY/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //CODE NOT BEING CHANGED CURRENTLY/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //CODE NOT BEING CHANGED CURRENTLY/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //CODE NOT BEING CHANGED CURRENTLY/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //CODE NOT BEING CHANGED CURRENTLY/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
     //GREEDY
     private static Path findFattestPath(Network network) {
         //System.out.println(network.toString());
@@ -257,12 +231,10 @@ public class Main {
             flow[i] = -1;
             edges[i] = null;
         }
-
         for(int u: sortedNodes) {
             for(Edge e: network.getNode(u).getOutgoingEdges()) {
                 int v = e.getToNode().getId();
                 int weight = e.getWeight();
-
                 if(weight < flow[u] || flow[u] < 0) {
                     if(weight >= flow[v]) {
                         flow[v] = weight;
@@ -283,41 +255,26 @@ public class Main {
             pathEdges.add(e);
             e = edges[e.getFromNode().getId()];
         }
-
-        //System.out.println(pathEdges.toString());
-
         return new Path(pathEdges);
     }
-    /**
-     * Parses the lines of a .graph file into a Network object
-     *
-     * @param graphs - each row contains a String representation of a graph
-     * @return
-     */
+
+
     public static ArrayList<Network> parseGraph(ArrayList<String> graphs) {
         ArrayList<Network> networks = new ArrayList<>();
         for (String graph : graphs) {
             Network network = new Network();
             String[] lines = graph.split("\n");
             int numNodes = Integer.parseInt(lines[0]);
-            //System.out.println("***NEW GRAPH***");
-
-            for (int i = 0; i < numNodes; i++) {
-                network.addNode();
-            }
-            //System.out.println(numNodes + " nodes added!");
-
+            for (int i = 0; i < numNodes; i++) network.addNode();
             for (int i = 1; i < lines.length; i++) {
                 String[] data = lines[i].split(" ");
                 Node fromNode = network.getNode(Integer.parseInt(data[0]));
                 Node toNode = network.getNode(Integer.parseInt(data[1]));
                 int weight = (int) Double.parseDouble(data[2]);
                 network.addEdge(fromNode, toNode, weight);
-                //System.out.println("Edge: "+fromNode+" -> "+toNode+": "+weight);
             }
             networks.add(network);
         }
-
         return networks;
     }
 
@@ -325,7 +282,6 @@ public class Main {
         File inputFile = new File(file);
         ArrayList<Integer> numTruthPaths = new ArrayList<>();
         Scanner scan;
-
         try {
             scan = new Scanner(inputFile);
             scan.useDelimiter("#[\\s\\S]+?[\\n]"); //splits into graphs by # XXX
@@ -337,22 +293,14 @@ public class Main {
             System.out.println("Could not open file: " + inputFile.toString());
             e.printStackTrace();
         }
-
         return numTruthPaths;
     }
 
-    /**
-     * Parses a .graph file into individual networks
-     *
-     * @param file - path to the file
-     * @return - list of networks after running on parseGraph()
-     */
     public static ArrayList<Network> readGraphFile(String file) {
         File inputFile = new File(file);
         ArrayList<Network> networks;
         ArrayList<String> graphs = new ArrayList<>();
         Scanner scan;
-
         try {
             scan = new Scanner(inputFile);
             scan.useDelimiter("#[\\s\\S]+?[\\n]"); //splits into graphs by # XXX
@@ -363,71 +311,12 @@ public class Main {
             System.out.println("Could not open file: " + inputFile.toString());
             e.printStackTrace();
         }
-
-        //System.out.println(graphs.toString());
-        //System.out.print(".");
         networks = parseGraph(graphs);
-
         return networks;
     }
 
-
-    static ArrayList<Integer> toAdd = new ArrayList<>();
-
-
-
-    private static ArrayList<Integer> compareBest(ArrayList<Integer> toCheck, ArrayList<Integer> knownTruth){
-        //adds smallest because it wont be split by other numbers
-        for(int i: toCheck){
-            int[] known = knownTruth.stream().mapToInt(k->k).toArray();
-            if(isSubsetSum(known, known.length, i)){
-                continue;
-            }else{
-                knownTruth.add(i);
-            }
-        }
-
-        return knownTruth;
-    }
-
-
-
-    // Returns true if there is a subset of
-    // set[] with sun equal to given sum
-    static boolean isSubsetSum(int set[],
-                               int n, int sum)
-    {
-        // The value of subset[i][j] will be
-        // true if there is a subset of
-        // set[0..j-1] with sum equal to i
-        boolean subset[][] =
-                new boolean[sum+1][n+1];
-
-        // If sum is 0, then answer is true
-        for (int i = 0; i <= n; i++)
-            subset[0][i] = true;
-
-        // If sum is not 0 and set is empty,
-        // then answer is false
-        for (int i = 1; i <= sum; i++)
-            subset[i][0] = false;
-
-        // Fill the subset table in botton
-        // up manner
-        for (int i = 1; i <= sum; i++)
-        {
-            for (int j = 1; j <= n; j++)
-            {
-                subset[i][j] = subset[i][j-1];
-                if (i >= set[j-1])
-                    subset[i][j] = subset[i][j] ||
-                            subset[i - set[j-1]][j-1];
-            }
-        }
-        return subset[sum][n];
-    }
-
-
+    //picks edges randomly
+    //I just felt like adding it cause why not
     public static Path random(Network network){
         Random rand = new Random();
         ArrayList<Edge> path = new ArrayList<>();
@@ -445,13 +334,12 @@ public class Main {
         return randomPath;
     }
 
+    //does what its called
     private static ArrayList<Integer> removeDuplicates(ArrayList<Integer> remove){
-
         Set<Integer> noDuplicate = new HashSet<>();
         noDuplicate.addAll(remove);
         remove.clear();
         remove.addAll(noDuplicate);
         return remove;
     }
-
 }
