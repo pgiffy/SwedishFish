@@ -6,9 +6,16 @@ public class Main {
 
     public static void main(String args[]) {
 
-        String directory = "/Users/Peter/Desktop/instances/rnaseq";
+            Threading threadHuman = new Threading("human");
+            Threading threadMouse = new Threading("mouse");
+            Threading threadZebra = new Threading("zebrafish");
+            threadHuman.start();
+            threadMouse.start();
+            threadZebra.start();
 
-        ArrayList<Network> networks;
+            String directory = "/Users/Peter/Desktop/instances/rnaseq";
+
+            ArrayList<Network> networks;
             PrintWriter out = null;
             int[] resultBins = new int[101];
             int[] totals = new int[101];
