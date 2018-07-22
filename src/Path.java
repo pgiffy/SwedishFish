@@ -11,11 +11,8 @@ public class Path {
         int minWeight = -1;
         for(Edge e: newEdges) {
             edges.add(e);
-            if(e.getWeight() < minWeight || minWeight < 0) {
-                minWeight = e.getWeight();
-            }
+            if(e.getWeight() < minWeight || minWeight < 0) minWeight = e.getWeight();
         }
-
         weight = minWeight;
         flow = minWeight;
         area = weight * edges.size();
@@ -28,11 +25,8 @@ public class Path {
         int minWeight = -1;
         for(Edge e: newEdges) {
             edges.add(e);
-            if(e.getWeight() < minWeight || minWeight < 0) {
-                minWeight = e.getWeight();
-            }
+            if(e.getWeight() < minWeight || minWeight < 0) minWeight = e.getWeight();
         }
-
         weight = minWeight;
         area = weight * edges.size();
     }
@@ -51,20 +45,15 @@ public class Path {
         }
     }
 
-    public HashMap<Integer, Integer> getWeightFreq() {
-        return weightFreq;
-    }
+    public HashMap<Integer, Integer> getWeightFreq() { return weightFreq; }
 
     public int largestFreqWeight() {
         int maxFreq = -1;
         int maxWeight = -1;
-        for(Map.Entry<Integer,Integer> entry: weightFreq.entrySet()) {
-            if(entry.getValue() > maxFreq) {
+        for(Map.Entry<Integer,Integer> entry: weightFreq.entrySet()) if(entry.getValue() > maxFreq) {
                 maxFreq = entry.getValue();
                 maxWeight = entry.getKey();
             }
-        }
-
         return maxWeight;
     }
 
@@ -73,23 +62,17 @@ public class Path {
         flow = weightNew;
     }
 
-    public ArrayList<Edge> getEdges() {
-        return edges;
-    }
+    public ArrayList<Edge> getEdges() { return edges; }
 
     public int getFlow() {return flow;}
 
     public int getArea() {return area;}
 
-    public int getWeight() {
-        return weight;
-    }
+    public int getWeight() { return weight; }
 
     public String toString() {
         String str = "[PATH weight="+weight+" area="+area+" ";
-        for(Edge e: edges) {
-            str += e.toString()+" ";
-        }
+        for(Edge e: edges) str += e.toString()+" ";
         str += "]";
         return str;
     }
