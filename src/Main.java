@@ -26,7 +26,7 @@ public class Main {
                         networks = readGraphFile(directory + "/" + animal + "/" + filename);
                         ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/" + animal + "/" + filenameNoExt + ".truth");
                         for (int num : numTruthPaths) totals[num - 1]++;
-                        System.out.print("!");
+                        System.out.print("?");
                         int count = 0;
                         for (Network network : networks) {
                             try {// sometimes in salmon there are graphs that overload the stack so this try catch is implemented to deal with that
@@ -35,13 +35,9 @@ public class Main {
                                 for (int i = 0; i < 7; i++) {
                                     //collapse down the network as much as possible before removing any edges
                                     network.breakItDown();
-                                    network.collapseEdges2();
                                     network.uglyBanana();
-                                    network.collapseEdges2();
                                 }
-                                for (int i = 0; i < 5; i++) {
-                                    rotation(network);
-                                }
+                                for (int i = 0; i < 5; i++) rotation(network);
                                 ArrayList<Integer> sortedNodes;
                                 int numPaths = 0;
                                 ArrayList<Integer> valK = stackFlow(network);
@@ -81,6 +77,7 @@ public class Main {
                                     for (int i = 0; i < 5; i++) rotation(network);
                                 }
                                 int truthPaths = numTruthPaths.get(count);
+                                //fail safe for accidentally setting numPaths to 0
                                 if (numPaths == 0) numPaths = 100;
                                 out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
                                 if (numPaths <= truthPaths) resultBins[truthPaths - 1]++;
@@ -233,6 +230,7 @@ public class Main {
     }
 
     public static ArrayList<Integer> readTruthFile(String file) {
+
         File inputFile = new File(file);
         ArrayList<Integer> numTruthPaths = new ArrayList<>();
         Scanner scan;
@@ -300,14 +298,12 @@ public class Main {
     //takes in network and calls reduction methods on it
     private static void rotation(Network network){
         network.breakItDown();
-        network.collapseEdges2();
         network.uglyBanana();
-        network.collapseEdges2();
         network.subsetGod3();
-        network.collapseEdges2();
+        network.uglyBanana();
         network.subsetGod2();
-        network.collapseEdges2();
+        network.uglyBanana();
         network.breakItDown();
-        network.collapseEdges2();
+        network.uglyBanana();
     }
 }

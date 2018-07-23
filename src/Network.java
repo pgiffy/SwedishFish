@@ -1,4 +1,3 @@
-import java.io.PrintWriter;
 import java.util.*;
 public class Network {
     private ArrayList<Edge> edges;
@@ -20,14 +19,6 @@ public class Network {
         toNode.addIncomingEdge(newEdge);
     }
 
-    public void addEdge(Edge e) {
-        edges.add(e);
-        Node fromNode = e.getFromNode();
-        Node toNode = e.getToNode();
-        fromNode.addEdge(e);
-        toNode.addIncomingEdge(e);
-    }
-
     public void reducePath(Path toReduce) {
         int pathWeight = toReduce.getWeight();
         for (Edge e : toReduce.getEdges()) {
@@ -47,8 +38,6 @@ public class Network {
     public int numEdges() { return edges.size(); }
 
     public Node getNode(int id) { return nodes.get(id); }
-
-    public Edge getEdge(Node fromNode, Node toNode) { return fromNode.findOutgoingEdge(toNode); }
 
     public ArrayList<Edge> getEdges() { return edges; }
 

@@ -31,7 +31,6 @@ public class Path {
         area = weight * edges.size();
     }
 
-
     private void weightFreqCalc() {
         weightFreq = new HashMap<>();
         for(Edge e: edges) {
@@ -45,28 +44,7 @@ public class Path {
         }
     }
 
-    public HashMap<Integer, Integer> getWeightFreq() { return weightFreq; }
-
-    public int largestFreqWeight() {
-        int maxFreq = -1;
-        int maxWeight = -1;
-        for(Map.Entry<Integer,Integer> entry: weightFreq.entrySet()) if(entry.getValue() > maxFreq) {
-                maxFreq = entry.getValue();
-                maxWeight = entry.getKey();
-            }
-        return maxWeight;
-    }
-
-    public void setWeight(int weightNew){
-        weight = weightNew;
-        flow = weightNew;
-    }
-
     public ArrayList<Edge> getEdges() { return edges; }
-
-    public int getFlow() {return flow;}
-
-    public int getArea() {return area;}
 
     public int getWeight() { return weight; }
 
