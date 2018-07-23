@@ -5,144 +5,98 @@ import java.io.*;
 public class Main {
 
     public static void main(String args[]) {
-
-            /*Threading threadHuman = new Threading("human");
-            Threading threadMouse = new Threading("mouse");
-            Threading threadZebra = new Threading("zebrafish");
-            threadHuman.start();
-            threadMouse.start();
-            threadZebra.start();*/
-
             String directory = "/home/peter/Desktop/instances/rnaseq/";
-
             ArrayList<Network> networks;
             PrintWriter out = null;
             int[] resultBins = new int[101];
             int[] totals = new int[101];
-
-
-            try {
+            String animal = "human";
+            try{
                 out = new PrintWriter(new File("outputFile.txt"));
-
-                File dir = new File(directory + "/salmon");
+                File dir = new File(directory + "/" + animal);
                 File[] files = dir.listFiles();
                 for (int i = 0; i < 100; i++) resultBins[i] = 0;
                 for (int i = 0; i < 100; i++) totals[i] = 0;
-
                 for (File curFile : files) {
                     int pos = curFile.getName().lastIndexOf(".");
                     String ext = curFile.getName().substring(pos + 1);
                     String filenameNoExt = curFile.getName().substring(0, pos);
                     String filename = curFile.getName();
                     if (ext.equals("graph")) {
-                        networks = readGraphFile(directory + "/salmon/" + filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/salmon/" + filenameNoExt + ".truth");
+                        networks = readGraphFile(directory + "/" + animal + "/" + filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/" + animal + "/" + filenameNoExt + ".truth");
                         for (int num : numTruthPaths) totals[num - 1]++;
                         System.out.print("!");
                         int count = 0;
                         for (Network network : networks) {
-                            network.collapseEdges2();
-                            for(int i = 0; i < 7; i++) {
-                                network.breakItDown();
+                            try {// sometimes in salmon there are graphs that overload the stack so this try catch is implemented to deal with that
+                                //currently is just skips the graph so report on that when writing
                                 network.collapseEdges2();
-                                network.uglyBanana();
-                                network.collapseEdges2();
-                            }
-                            for(int i = 0; i < 5; i++) {
-                                network.breakItDown();
-                                network.collapseEdges2();
-                                network.uglyBanana();
-                                network.collapseEdges2();
-                                network.subsetGod3();
-                                network.collapseEdges2();
-                                network.subsetGod2();
-                                network.collapseEdges2();
-                            }
-                            ArrayList<Integer> sortedNodes;
-                            int numPaths = 0;
-                            ArrayList<Integer> valK = stackFlow(network);
-                            Collections.sort(valK);
-                            Collections.reverse(valK);
-                            int k = valK.get(0);
-                            while (network.numEdges() > 0) {
-                                sortedNodes = network.topoSort();
-                                Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                if (newPath == null) {
+                                for (int i = 0; i < 7; i++) {
+                                    //collapse down the network as much as possible before removing any edges
+                                    network.breakItDown();
+                                    network.collapseEdges2();
+                                    network.uglyBanana();
+                                    network.collapseEdges2();
+                                }
+                                for (int i = 0; i < 5; i++) {
+                                    rotation(network);
+                                }
+                                ArrayList<Integer> sortedNodes;
+                                int numPaths = 0;
+                                ArrayList<Integer> valK = stackFlow(network);
+                                Collections.sort(valK);
+                                Collections.reverse(valK);
+                                int k = valK.get(0);
+                                while (network.numEdges() > 0) {
+                                    sortedNodes = network.topoSort();
+                                    Path newPath = findMaxPath(network, k, sortedNodes, out);
+                                    if (newPath == null) {
+                                        Path selectedPath = findFattestPath(network);
+                                        network.reducePath(selectedPath);
+                                        numPaths++;
+                                        network.collapseEdges2();
+                                        for (int i = 0; i < 5; i++) rotation(network);
+                                        valK = stackFlow(network);
+                                        Collections.sort(valK);
+                                        Collections.reverse(valK);
+                                        k = valK.get(0);
+                                    } else {
+                                        network.reducePath(newPath);
+                                        numPaths++;
+                                        network.collapseEdges2();
+                                        rotation(network);
+                                        valK = stackFlow(network);
+                                        Collections.sort(valK);
+                                        Collections.reverse(valK);
+                                        if (valK.isEmpty()) break;
+                                        k = valK.get(0);
+                                    }
+                                }
+                                while (network.numEdges() > 0) {
                                     Path selectedPath = findFattestPath(network);
                                     network.reducePath(selectedPath);
                                     numPaths++;
                                     network.collapseEdges2();
-                                    for(int i = 0; i < 5 ; i++) {
-                                        network.breakItDown();
-                                        network.collapseEdges2();
-                                        network.uglyBanana();
-                                        network.collapseEdges2();
-                                        network.subsetGod3();
-                                        network.collapseEdges2();
-                                        network.subsetGod2();
-                                        network.collapseEdges2();
-                                        network.breakItDown();
-                                        network.collapseEdges2();
-                                    }
-                                    valK = stackFlow(network);
-                                    Collections.sort(valK);
-                                    Collections.reverse(valK);
-                                    k = valK.get(0);
-                                }else{
-                                    network.reducePath(newPath);
-                                    numPaths++;
-                                    network.collapseEdges2();
-                                    network.breakItDown();
-                                    network.collapseEdges2();
-                                    network.uglyBanana();
-                                    network.collapseEdges2();
-                                    network.subsetGod3();
-                                    network.collapseEdges2();
-                                    network.subsetGod2();
-                                    network.collapseEdges2();
-                                    network.breakItDown();
-                                    network.collapseEdges2();
-                                    valK = stackFlow(network);
-                                    Collections.sort(valK);
-                                    Collections.reverse(valK);
-                                    if(valK.isEmpty()) break;
-                                    k = valK.get(0);
+                                    for (int i = 0; i < 5; i++) rotation(network);
                                 }
+                                int truthPaths = numTruthPaths.get(count);
+                                if (numPaths == 0) numPaths = 100;
+                                out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
+                                if (numPaths <= truthPaths) resultBins[truthPaths - 1]++;
+                                count++;
+                            }catch(OutOfMemoryError e){
+                                continue;
                             }
-                            while(network.numEdges() > 0) {
-                                Path selectedPath = findFattestPath(network);
-                                network.reducePath(selectedPath);
-                                numPaths++;
-                                network.collapseEdges2();
-                                for(int i = 0; i < 5; i++) {
-                                    network.breakItDown();
-                                    network.collapseEdges2();
-                                    network.uglyBanana();
-                                    network.collapseEdges2();
-                                    network.subsetGod3();
-                                    network.collapseEdges2();
-                                    network.subsetGod2();
-                                    network.collapseEdges2();
-                                    network.breakItDown();
-                                    network.collapseEdges2();
-                                }
-                            }
-                            int truthPaths = numTruthPaths.get(count);
-                            if(numPaths == 0) numPaths = 100;
-                            out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
-                            if (numPaths <= truthPaths) resultBins[truthPaths - 1]++;
-                            count++;
                         }
                     }
                 }
-
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
                 e.printStackTrace();
             } finally {
                 out.close();
             }
-
             System.out.printf("\n# Paths\tSuccess Rate\n");
             for (int i = 0; i < 10; i++) {
                 double successRate = ((double) resultBins[i] / totals[i]) * 100;
@@ -157,11 +111,9 @@ public class Main {
         for(int i = 0; i < lengths.length; i++) lengths[i] = -1;
         for(int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
         lengths[0] = 0;
-
         //System.out.println(sortedNodes);
         for(int nodeId: sortedNodes) {
             Node node = network.getNode(nodeId);
-
             for(Edge e: node.getOutgoingEdges()) {
                 int weight = e.getWeight();
                 int newLength = 1 + lengths[nodeId];
@@ -186,7 +138,6 @@ public class Main {
             count++;
             if(count > selectedEdges.length) return null;
         }
-
         ArrayList<Edge> selectedEdges2 = new ArrayList<>();
         while(!edgesReverse.empty()) {
             Edge e = edgesReverse.pop();
@@ -224,7 +175,6 @@ public class Main {
             }
         }
         return bestList;
-
     }
     //GREEDY
     private static Path findFattestPath(Network network) {
@@ -253,7 +203,6 @@ public class Main {
                 }
             }
         }
-
         ArrayList<Edge> pathEdges = new ArrayList<>();
         Edge e = edges[edges.length-1];
         while(e != null) {
@@ -346,5 +295,19 @@ public class Main {
         remove.clear();
         remove.addAll(noDuplicate);
         return remove;
+    }
+
+    //takes in network and calls reduction methods on it
+    private static void rotation(Network network){
+        network.breakItDown();
+        network.collapseEdges2();
+        network.uglyBanana();
+        network.collapseEdges2();
+        network.subsetGod3();
+        network.collapseEdges2();
+        network.subsetGod2();
+        network.collapseEdges2();
+        network.breakItDown();
+        network.collapseEdges2();
     }
 }

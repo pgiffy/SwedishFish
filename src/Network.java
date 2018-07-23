@@ -580,9 +580,7 @@ public class Network {
         if (arr[0] <= sum) grid[0][arr[0]] = true;
         for (int i = 1; i < n; ++i)
             for (int j = 0; j < sum + 1; ++j)
-                grid[i][j] = (arr[i] <= j) ? grid[i-1][j] ||
-                        grid[i-1][j-arr[i]]
-                        : grid[i - 1][j];
+                grid[i][j] = (arr[i] <= j) ? grid[i-1][j] || grid[i-1][j-arr[i]] : grid[i - 1][j];
         if (grid[n-1][sum] == false) return;
         ArrayList<Integer> p = new ArrayList<>();
         printSubsetsRec(arr, n-1, sum, p);
