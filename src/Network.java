@@ -1,8 +1,6 @@
 import java.io.PrintWriter;
 import java.util.*;
-import java.io.*;
 public class Network {
-
     private ArrayList<Edge> edges;
     private ArrayList<Node> nodes;
     static ArrayList<ArrayList<Integer>> allSubsets = new ArrayList<>();
@@ -38,15 +36,6 @@ public class Network {
         }
     }
 
-    /**
-     * Prints network details to specified output file
-     */
-    public void printDetails(PrintWriter out) {
-        for (Node n : nodes) out.println(n.printEdges() + " ");
-        out.println("*******");
-        for (Edge e : edges) out.println(e.toString());
-    }
-
     public String toString() {
         String str = "Network: " + numEdges() + " edges, " + numNodes() + " nodes\n";
         for (Edge e : edges) str += e.toString() + " ";
@@ -68,18 +57,6 @@ public class Network {
         e.getFromNode().removeOutgoingEdge(e);
         e.getToNode().removeIncomingEdge(e);
     }
-
-
-    public void removeNode(Node node) {
-        Node fromNode = node.getFromNodes().get(0);
-        Node toNode = node.getToNodes().get(0);
-        Edge outGoing = getEdge(node, toNode);
-        Edge inComing = getEdge(fromNode, node);
-        addEdge(fromNode, toNode, inComing.getWeight());
-        removeEdge(outGoing);
-        removeEdge(inComing);
-    }
-
 
     public ArrayList<Integer> topoSort() {
         Stack stack = new Stack();
@@ -244,13 +221,16 @@ public class Network {
                 ArrayList <Integer> incomingWeights = new ArrayList<>();
                 ArrayList<ArrayList<Integer>> one;
                 ArrayList<ArrayList<Integer>> two;
-                int n = incomingWeights.size();
+                for(Edge e: getNode(i).getIncomingEdges()) incomingWeights.add(e.getWeight());
+                int[] arrayIncoming = new int[incomingWeights.size()];
+                for (int j = 0; j < arrayIncoming.length; j++) arrayIncoming[j] = incomingWeights.get(j);
+                int n = arrayIncoming.length;
                 int oneWeight = getNode(i).getOutgoingEdges().get(0).getWeight();
                 int twoWeight = getNode(i).getOutgoingEdges().get(1).getWeight();
-                findAllSubsets(incomingWeights, n, oneWeight);
+                findAllSubsets(arrayIncoming, n, oneWeight);
                 one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                findAllSubsets(incomingWeights, n, twoWeight);
+                findAllSubsets(arrayIncoming, n, twoWeight);
                 two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
                 if(one.isEmpty() || two.isEmpty()) continue;
@@ -280,10 +260,10 @@ public class Network {
                                     continue;
                                 }
                             }
+                            all.clear();
                             checker = true;
                             break;
                         }
-                        all.clear();
                     }
                     if(checker) break;
                 }
@@ -309,13 +289,16 @@ public class Network {
                 ArrayList <Integer> outGoingWeights = new ArrayList<>();
                 ArrayList<ArrayList<Integer>> one;
                 ArrayList<ArrayList<Integer>> two;
-                int n = outGoingWeights.size();
+                for(Edge e: getNode(i).getOutgoingEdges()) outGoingWeights.add(e.getWeight());
+                int[] arrayOutgoing = new int[outGoingWeights.size()];
+                for (int j = 0; j < arrayOutgoing.length; j++) arrayOutgoing[j] = outGoingWeights.get(j);
+                int n = arrayOutgoing.length;
                 int oneWeight = getNode(i).getIncomingEdges().get(0).getWeight();
                 int twoWeight = getNode(i).getIncomingEdges().get(1).getWeight();
-                findAllSubsets(outGoingWeights, n, oneWeight);
+                findAllSubsets(arrayOutgoing, n, oneWeight);
                 one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                findAllSubsets(outGoingWeights, n, twoWeight);
+                findAllSubsets(arrayOutgoing, n, twoWeight);
                 two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
                 if(one.isEmpty() || two.isEmpty()) continue;
@@ -345,10 +328,10 @@ public class Network {
                                     continue;
                                 }
                             }
+                            all.clear();
                             checker = true;
                             break;
                         }
-                        all.clear();
                     }
                     if(checker) break;
                 }
@@ -380,17 +363,20 @@ public class Network {
                 ArrayList<ArrayList<Integer>> one;
                 ArrayList<ArrayList<Integer>> two;
                 ArrayList<ArrayList<Integer>> three;
-                int n = incomingWeights.size();
+                for(Edge e: getNode(i).getIncomingEdges()) incomingWeights.add(e.getWeight());
+                int[] arrayIncoming = new int[incomingWeights.size()];
+                for (int j = 0; j < arrayIncoming.length; j++) arrayIncoming[j] = incomingWeights.get(j);
+                int n = arrayIncoming.length;
                 int oneWeight = getNode(i).getOutgoingEdges().get(0).getWeight();
                 int twoWeight = getNode(i).getOutgoingEdges().get(1).getWeight();
                 int threeWeight = getNode(i).getOutgoingEdges().get(2).getWeight();
-                findAllSubsets(incomingWeights, n, oneWeight);
+                findAllSubsets(arrayIncoming, n, oneWeight);
                 one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                findAllSubsets(incomingWeights, n, twoWeight);
+                findAllSubsets(arrayIncoming, n, twoWeight);
                 two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                findAllSubsets(incomingWeights, n, threeWeight);
+                findAllSubsets(arrayIncoming, n, threeWeight);
                 three = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
                 if(one.isEmpty() || two.isEmpty() || three.isEmpty()) continue;
@@ -429,10 +415,10 @@ public class Network {
                                         continue;
                                     }
                                 }
+                                all.clear();
                                 checker = true;
                                 break;
                             }
-                            all.clear();
                         }
                         if(checker) break;
                     }
@@ -467,17 +453,20 @@ public class Network {
                 ArrayList<ArrayList<Integer>> one;
                 ArrayList<ArrayList<Integer>> two;
                 ArrayList<ArrayList<Integer>> three;
-                int n = outGoingWeights.size();
+                for(Edge e: getNode(i).getOutgoingEdges()) outGoingWeights.add(e.getWeight());
+                int[] arrayOutgoing = new int[outGoingWeights.size()];
+                for (int j = 0; j < arrayOutgoing.length; j++) arrayOutgoing[j] = outGoingWeights.get(j);
+                int n = arrayOutgoing.length;
                 int oneWeight = getNode(i).getIncomingEdges().get(0).getWeight();
                 int twoWeight = getNode(i).getIncomingEdges().get(1).getWeight();
                 int threeWeight = getNode(i).getOutgoingEdges().get(2).getWeight();
-                findAllSubsets(outGoingWeights, n, oneWeight);
+                findAllSubsets(arrayOutgoing, n, oneWeight);
                 one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                findAllSubsets(outGoingWeights, n, twoWeight);
+                findAllSubsets(arrayOutgoing, n, twoWeight);
                 two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                findAllSubsets(outGoingWeights, n, threeWeight);
+                findAllSubsets(arrayOutgoing, n, threeWeight);
                 three = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
                 if(one.isEmpty() || two.isEmpty() || three.isEmpty()) continue;
@@ -517,10 +506,10 @@ public class Network {
                                         continue;
                                     }
                                 }
+                                all.clear();
                                 checker = true;
                                 break;
                             }
-                            all.clear();
                         }
                         if(checker) break;
                     }
@@ -553,20 +542,17 @@ public class Network {
         }
     }
 
-    
     //this is used in the above subsets methods
-    static boolean[][] dp;
 
-
+    static boolean grid[][];
     static void addSubset(ArrayList<Integer> v) {
         ArrayList<Integer> copy = (ArrayList<Integer>) v.clone();
         allSubsets.add(copy);
     }
 
-    static void findRecursivesets(ArrayList<Integer> arr, int i, int sum, ArrayList<Integer> p) {
-        ArrayList<ArrayList<Integer>> allSubsets = new ArrayList<>();
-        if (i == 0 && sum != 0 && dp[0][sum]) {
-            p.add(arr.get(i));
+    static void printSubsetsRec(int arr[], int i, int sum, ArrayList<Integer> p) {
+        if (i == 0 && sum != 0 && grid[0][sum]) {
+            p.add(arr[i]);
             addSubset(p);
             p.clear();
             return;
@@ -576,27 +562,29 @@ public class Network {
             p.clear();
             return;
         }
-        if (dp[i-1][sum]) {
+        if (grid[i-1][sum]) {
             ArrayList<Integer> b = new ArrayList<>();
             b.addAll(p);
-            findRecursivesets(arr, i-1, sum, b);
+            printSubsetsRec(arr, i-1, sum, b);
         }
-        if (sum >= arr.get(i) && dp[i-1][sum-arr.get(i)]) {
-            p.add(arr.get(i));
-            findRecursivesets(arr, i-1, sum-arr.get(i), p);
+        if (sum >= arr[i] && grid[i-1][sum-arr[i]]) {
+            p.add(arr[i]);
+            printSubsetsRec(arr, i-1, sum-arr[i], p);
         }
     }
 
-    static void findAllSubsets(ArrayList<Integer> arr, int n, int sum) {
+    static void findAllSubsets(int arr[], int n, int sum) {
         if (n == 0 || sum < 0) return;
-        dp = new boolean[n][sum + 1];
-        for (int i=0; i<n; ++i) dp[i][0] = true;
-        if (arr.get(0) <= sum) dp[0][arr.get(0)] = true;
+        grid = new boolean[n][sum + 1];
+        for (int i=0; i<n; ++i) grid[i][0] = true;
+        if (arr[0] <= sum) grid[0][arr[0]] = true;
         for (int i = 1; i < n; ++i)
             for (int j = 0; j < sum + 1; ++j)
-                dp[i][j] = (arr.get(i) <= j) ? (dp[i-1][j] || dp[i-1][j-arr.get(i)]) : dp[i - 1][j];
-        if (dp[n-1][sum] == false) return;
+                grid[i][j] = (arr[i] <= j) ? grid[i-1][j] ||
+                        grid[i-1][j-arr[i]]
+                        : grid[i - 1][j];
+        if (grid[n-1][sum] == false) return;
         ArrayList<Integer> p = new ArrayList<>();
-        findRecursivesets(arr, n-1, sum, p);
+        printSubsetsRec(arr, n-1, sum, p);
     }
 }

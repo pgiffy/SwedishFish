@@ -6,14 +6,14 @@ public class Main {
 
     public static void main(String args[]) {
 
-            Threading threadHuman = new Threading("human");
+            /*Threading threadHuman = new Threading("human");
             Threading threadMouse = new Threading("mouse");
             Threading threadZebra = new Threading("zebrafish");
             threadHuman.start();
             threadMouse.start();
-            threadZebra.start();
+            threadZebra.start();*/
 
-            String directory = "/Users/Peter/Desktop/instances/rnaseq";
+            String directory = "/home/peter/Desktop/instances/rnaseq/";
 
             ArrayList<Network> networks;
             PrintWriter out = null;
@@ -24,7 +24,7 @@ public class Main {
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
 
-                File dir = new File(directory + "/zebrafish");
+                File dir = new File(directory + "/salmon");
                 File[] files = dir.listFiles();
                 for (int i = 0; i < 100; i++) resultBins[i] = 0;
                 for (int i = 0; i < 100; i++) totals[i] = 0;
@@ -35,8 +35,8 @@ public class Main {
                     String filenameNoExt = curFile.getName().substring(0, pos);
                     String filename = curFile.getName();
                     if (ext.equals("graph")) {
-                        networks = readGraphFile(directory + "/zebrafish/" + filename);
-                        ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/zebrafish/" + filenameNoExt + ".truth");
+                        networks = readGraphFile(directory + "/salmon/" + filename);
+                        ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/salmon/" + filenameNoExt + ".truth");
                         for (int num : numTruthPaths) totals[num - 1]++;
                         System.out.print("!");
                         int count = 0;
@@ -148,8 +148,6 @@ public class Main {
                 double successRate = ((double) resultBins[i] / totals[i]) * 100;
                 System.out.printf("%d\t\t%.2f\n", i + 1, successRate);
             }
-
-
     }
 
     //finds longest path by edge number

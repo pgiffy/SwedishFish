@@ -10,7 +10,7 @@ public class Threading extends Thread{
     }
 
     public void run(){
-        String directory = "/Users/Peter/Desktop/instances/rnaseq";
+        String directory = "/home/peter/Desktop/instances/rnaseq/";
         ArrayList<Network> networks;
         int[] resultBins = new int[101];
         int[] totals = new int[101];
@@ -26,7 +26,15 @@ public class Threading extends Thread{
                 networks = readGraphFile(directory + "/" + animal+ "/" + filename);
                 ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/" + animal + "/" + filenameNoExt + ".truth");
                 for (int num : numTruthPaths) totals[num - 1]++;
-                System.out.print("!");
+                switch(animal){
+                    case "human":
+                        System.out.print("!");
+                    case "mouse":
+                        System.out.print("@");
+                    case "zebrafish":
+                        System.out.print("#");
+                }
+                //System.out.print("!");
                 int count = 0;
                 for (Network network : networks) {
                     network.collapseEdges2();
@@ -123,7 +131,7 @@ public class Threading extends Thread{
             }
         }
 
-        System.out.println("For" + animal);
+        System.out.print("\nFor " + animal + " ");
         System.out.printf("\n# Paths\tSuccess Rate\n");
         for (int i = 0; i < 10; i++) {
             double successRate = ((double) resultBins[i] / totals[i]) * 100;
