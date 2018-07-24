@@ -19,13 +19,14 @@ public class Main {
 
         ArrayList<Network> networks;
         if(importMode.equals("multiple")) {
-            String animal = "human";
+            String animal = "salmon";
             boolean debug = false;
             PrintWriter out = null;
             int[] resultBins = new int[100];
             int[] totals = new int[100];
             int numSuccess = 0;
             int numTotal = 0;
+            int skipped = 0;
 
             try {
                 out = new PrintWriter(new File("outputFile.txt"));
@@ -52,25 +53,36 @@ public class Main {
 
                         System.out.print("*");
                         int count = 0;
+                        ArrayList<Path> paths = new ArrayList<>();
                         for(Network network: networks) {
                             network.collapseEdges();
-                            ArrayList<Integer> predictedTruthWeights = getPredictedTruthWeights(network);
-                            //System.out.println(predictedTruthWeights.toString());
-                            //ArrayList<Integer> predictedTruthWeights = new ArrayList<>();
-                            if(debug) network.printDOT("graph.dot");
-                            ArrayList<Path> paths = new ArrayList<>();
+                            network.assignEdgeLetters();
+                            paths.clear();
+                            if(network.numEdges() > 60) {
 
-                            int x = 1;
-                            if(debug) System.out.println("file = " + filenameNoExt + ", graph # "+count);
-                            while(network.numEdges() > 0) {
-                                ArrayList<Integer> wrongWeights = new ArrayList<>();
-                                Path toReduce = findMaxEdgeRemovePath(network, predictedTruthWeights, wrongWeights, paths);
-                                paths.add(toReduce);
-                                if(debug) network.printDOT("test/"+x+".dot", toReduce.getEdges());
-                                x++;
-                                network.reducePath(toReduce);
-                                network.collapseEdges();
-                                if(debug) network.printDOT("graph2.dot");
+                                while(network.numEdges() > 0) {
+                                    Path toReduce = findFattestPath(network);
+                                    paths.add(toReduce);
+                                    network.reducePath(toReduce);
+                                }
+
+                            } else {
+                                ArrayList<Integer> predictedTruthWeights = getPredictedTruthWeights(network);
+                                //System.out.println(predictedTruthWeights.toString());
+                                //ArrayList<Integer> predictedTruthWeights = new ArrayList<>();
+                                if (debug) network.printDOT("graph.dot");
+
+                                int x = 1;
+                                if (debug) System.out.println("file = " + filenameNoExt + ", graph # " + count);
+                                while (network.numEdges() > 0) {
+                                    Path toReduce = findMaxEdgeRemovePath(network, predictedTruthWeights);
+                                    paths.add(toReduce);
+                                    if (debug) network.printDOT("test/" + x + ".dot", toReduce.getEdges());
+                                    x++;
+                                    network.reducePath(toReduce);
+                                    network.collapseEdges();
+                                    if (debug) network.printDOT("graph2.dot");
+                                }
                             }
 
                             int numPaths = paths.size();
@@ -96,6 +108,7 @@ public class Main {
                 out.close();
             }
 
+            System.out.println("Skipped: " + skipped);
             System.out.printf("\n# Paths\tSuccess Rate\n");
             for(int i = 0; i < 10; i++) {
                 double successRate = ((double)resultBins[i] / totals[i]) * 100;
@@ -105,166 +118,182 @@ public class Main {
         }
     }
 
-    private static Path findMaxEdgeRemovePath(Network network, ArrayList<Integer> predictedTruthWeights, ArrayList<Integer> wrongWeights, ArrayList<Path> paths) {
+    private static Path findMaxEdgeRemovePath(Network network, ArrayList<Integer> predictedTruthWeights) {
         ArrayList<Integer> sortedNodes = network.topoSort();
-
-        int[] numEdges = new int[network.numNodes()];
-        ArrayList[] edgeList = new ArrayList[network.numNodes()];
-        ArrayList[] flowList = new ArrayList[network.numNodes()];
-        HashMap[] edgeFlowMap = new HashMap[network.numNodes()];
-
-        for(int i = 0; i < network.numNodes(); i++) {
-            numEdges[i] = 0;
-            edgeList[i] = new ArrayList<Edge>();
-            flowList[i] = new ArrayList<Integer>();
-            edgeFlowMap[i] = new HashMap<Integer, Edge>();
+        ArrayList[] data = new ArrayList[network.numNodes()];
+        for(int i = 0; i < data.length; i++) {
+            data[i] = new ArrayList<HashMap<String, Object>>();
         }
 
+        ArrayList<Edge> itemEdgeList = new ArrayList<>();
         for(int nodeId : sortedNodes) {
-            Node node = network.getNode(nodeId);
-            ArrayList<Edge> outgoingEdges = node.getOutgoingEdges();
-            ArrayList<Integer> newFlowFound = new ArrayList<>();
-            for(Edge e : outgoingEdges) {
-                int weight = e.getWeight();
+            ArrayList<HashMap<String, Object>> thisNodeData = data[nodeId];
+            for(Edge e : network.getNode(nodeId).getOutgoingEdges()) {
                 int toNodeId = e.getToNode().getId();
-                int prevEdgesRemoved = numEdges[nodeId];
-                int newFlow;
-                int newEdgesRemoved = 0;
 
-                //special case for the first node
+                //add new edge flow for each outgoing edge from 0
                 if(nodeId == 0) {
-                    newFlow = weight;
-                    flowList[toNodeId].add(newFlow);
-                    edgeList[toNodeId].add(e);
-                    edgeFlowMap[toNodeId].put(newFlow, e);
-                    numEdges[toNodeId] = 1;
+                    ArrayList<Edge> newEdgeList = new ArrayList<>();
+                    newEdgeList.add(e);
+                    HashMap<String, Object> newItem = new HashMap<>();
+                    newItem.put("weight", e.getWeight());
+                    newItem.put("numEdges", 1);
+                    newItem.put("edgeList", newEdgeList);
+                    data[toNodeId].add(newItem);
                     continue;
                 }
 
-                //for each flow that could go through this node
-                for(int i = 0; i < flowList[nodeId].size(); i++) {
-                    int flow = (int) flowList[nodeId].get(i);
-
-
-                    if(weight > flow && numEdges[nodeId] >= numEdges[toNodeId] && !newFlowFound.contains(toNodeId)) {
-
-                        if(numEdges[nodeId] > numEdges[toNodeId]) {
-                            flowList[toNodeId].clear();
-                            edgeList[toNodeId].clear();
-                            edgeFlowMap[toNodeId].clear();
-                        }
-
-                        flowList[toNodeId].add(flow);
-                        edgeList[toNodeId].add(e);
-
-                        if(!(edgeFlowMap[toNodeId].containsKey(flow) && predictedTruthWeights.contains(toNodeId))) {
-                            edgeFlowMap[toNodeId].put(flow, e);
-                        }
-
-                        numEdges[toNodeId] = numEdges[nodeId];
+                //copy all flows that can be carried by current edge
+                for(HashMap<String, Object> dataItem : thisNodeData) {
+                    int itemWeight = (int) dataItem.get("weight");
+                    int itemNumEdges = (int) dataItem.get("numEdges");
+                    itemEdgeList.clear();
+                    if(dataItem.get("edgeList") instanceof ArrayList) {
+                        itemEdgeList.addAll((List) dataItem.get("edgeList"));
+                    } else {
+                        itemEdgeList = new ArrayList<>();
                     }
 
-                    else if(weight < flow && (numEdges[nodeId] > numEdges[toNodeId]) && !newFlowFound.contains(toNodeId)) {
-
-                        flowList[toNodeId].add(weight);
-                        edgeList[toNodeId].add(e);
-                        edgeFlowMap[toNodeId].put(weight, e);
-
-                        if(numEdges[toNodeId] == 0) numEdges[toNodeId] = 1;
-                        else numEdges[toNodeId] = numEdges[nodeId];
+                    HashMap<String, Object> newItem = new HashMap<>();
+                    if(itemWeight <= e.getWeight()) {
+                        int itemNumEdges_new = itemNumEdges;
+                        if(itemWeight == e.getWeight()) itemNumEdges_new = itemNumEdges + 1;
+                        itemEdgeList.add(e);
+                        ArrayList<Edge> newItemEdgeList = new ArrayList<>();
+                        newItemEdgeList.addAll(itemEdgeList);
+                        newItem.put("weight", itemWeight);
+                        newItem.put("numEdges", itemNumEdges_new);
+                        newItem.put("edgeList", newItemEdgeList);
+                    } else {
+                        itemEdgeList.add(e);
+                        ArrayList<Edge> newItemEdgeList = new ArrayList<>();
+                        newItemEdgeList.addAll(itemEdgeList);
+                        itemEdgeList.clear();
+                        newItem.put("weight", e.getWeight());
+                        newItem.put("numEdges", 1);
+                        newItem.put("edgeList", newItemEdgeList);
                     }
 
-                    else if(weight == flow && numEdges[nodeId]+1 >= numEdges[toNodeId] && !newFlowFound.contains(toNodeId)) {
-
-                        numEdges[toNodeId] = numEdges[nodeId] + 1;
-                        flowList[toNodeId].clear();
-                        edgeList[toNodeId].clear();
-                        edgeFlowMap[toNodeId].clear();
-                        flowList[toNodeId].add(weight);
-                        edgeList[toNodeId].add(e);
-                        edgeFlowMap[toNodeId].put(weight, e);
-
-                        newFlowFound.add(toNodeId);
-                    }
-
-                    else if(weight == flow && newFlowFound.contains(toNodeId)) {
-
-                        //numEdges[toNodeId] = numEdges[nodeId]+1;
-                        //flowList[toNodeId].clear();
-                        //edgeList[toNodeId].clear();
-                        //edgeFlowMap[toNodeId].clear();
-                        flowList[toNodeId].add(weight);
-                        edgeList[toNodeId].add(e);
-                        edgeFlowMap[toNodeId].put(weight, e);
-                    }
+                    data[toNodeId].add(newItem);
                 }
 
             }
+            //System.out.println(nodeId+": "+thisNodeData.toString());
         }
 
-        //System.out.println(network.toString());
+        //find path that will remove largest # edges
+        int lastNodeId = network.numNodes()-1;
+        int maxNumEdges = -1;
+        int maxWeight = -1;
+        Path selectedPath = null;
+        for(Object item : data[lastNodeId]) {
+            HashMap<String, Object> item2 = (HashMap<String, Object>) item;
+            int numEdges = (int) item2.get("numEdges");
+            int weight = (int) item2.get("weight");
+            if(numEdges > maxNumEdges) {
+                maxNumEdges = numEdges;
+                maxWeight = weight;
+                //selectedPath = new Path((ArrayList) item2.get("edgeList"));
+            }
+        }
 
-        //System.out.println(Arrays.toString(numEdges));
-        //System.out.println(Arrays.toString(flowList));
-        //System.out.println(Arrays.toString(edgeList));
-        //System.out.println(Arrays.toString(edgeFlowMap));
+        //Break ties by choosing the path with the least number of duplicates
+        HashMap<String, Integer> duplicates = new HashMap<>();
+        for(Object item : data[lastNodeId]) {
+            HashMap<String, Object> item2 = (HashMap<String, Object>) item;
+            String id = item2.get("numEdges")+"-"+item2.get("weight");
+            if((int) item2.get("numEdges") < maxNumEdges) continue;
+            if(duplicates.get(id) == null) {
+                duplicates.put(id, 1);
+            } else {
+                int prevVal = duplicates.get(id);
+                duplicates.put(id, prevVal+1);
+            }
+        }
 
-        int finalWeight = (int) flowList[network.numNodes()-1].get(flowList[network.numNodes()-1].size()-1);
-        ArrayList<Edge> finalEdgeList = new ArrayList<>();
-        int i = network.numNodes()-1;
+        //System.out.println(duplicates.toString());
 
-        HashMap<Integer, Integer> freqs = getWeightFrequencies(network);
-        //System.out.println(freqs.toString());
-        //System.out.println(predictedTruthWeights.toString());
+        int minDuplicates = -1;
+        ArrayList<String> idList = new ArrayList<>();
+        for(Map.Entry<String, Integer> item : duplicates.entrySet()) {
+            if(item.getValue() <= minDuplicates || minDuplicates < 0) {
+                minDuplicates = item.getValue();
+                idList.add(item.getKey());
+            }
+        }
 
-        while(i > 0) {
-            HashMap<Integer, Edge> map = edgeFlowMap[i];
-            Edge newEdge = map.get(finalWeight);
+        //2nd tie-breaker: take the path with the least number of predicted truth weights
+                            // (that aren't the path weight)
+        int minNumTruthEdges = -1;
+        ArrayList<Path> possiblePaths = new ArrayList<>();
+        for(String id : idList) {
 
-            if(newEdge == null && !map.keySet().isEmpty()) {
-                Set<Integer> possibleWeights = map.keySet();
-
-                int tieBreakWeight = 0;
-                int minFreq = -1;
-                for(int w : possibleWeights) {
-                    if(w < finalWeight) continue; //must be able to carry flow
-                    int projectedWeight = w - finalWeight;
-                    if(predictedTruthWeights.contains(projectedWeight)) {
-                        tieBreakWeight = w;
-                        break;
-                    } else if(freqs.get(w) < minFreq || minFreq < 0) {
-                        minFreq = freqs.get(w);
-                        tieBreakWeight = w;
-                    }
+            //find the paths with the selected ID
+            for(Object item : data[lastNodeId]) {
+                HashMap<String, Object> item2 = (HashMap<String, Object>) item;
+                String testId = item2.get("numEdges")+"-"+item2.get("weight");
+                if(testId.equals(id)) {
+                    possiblePaths.add(new Path((ArrayList) item2.get("edgeList")));
                 }
+            }
+        }
 
-                /*
-                if(predictedTruthWeights.contains(tieBreakWeight) && !chosenWeights.contains(tieBreakWeight) && wrongWeights.size() < 3) {
-                    if(wrongWeights.isEmpty() || wrongWeights.get(0) > 0) {
-                        wrongWeights.add(tieBreakWeight);
-                        //System.out.println(wrongWeights.toString());
-                        return findMaxEdgeRemovePath(network, predictedTruthWeights, wrongWeights, paths);
-                    }
-                }*/
-
-                newEdge = map.get(tieBreakWeight);
+        for(Path p : possiblePaths) {
+            int pathWeight = p.getWeight();
+            int numTruthEdges = 0;
+            for(Edge e : p.getEdges()) {
+                if(e.getWeight() != pathWeight && predictedTruthWeights.contains(e.getWeight())) {
+                    numTruthEdges++;
+                }
             }
 
-            else if(newEdge == null) break;
-
-            i = newEdge.getFromNode().getId();
-
-            //System.out.println("EDGE #"+i + newEdge.toString());
-            finalEdgeList.add(newEdge);
+            if(numTruthEdges < minNumTruthEdges || minNumTruthEdges < 0) {
+                minNumTruthEdges = numTruthEdges;
+                selectedPath = p;
+            }
         }
 
-        //System.out.println("TO REMOVE: " + finalEdgeList.toString());
-        //System.out.println(Arrays.toString(edgeFlowMap));
 
-        return new Path(finalEdgeList);
+        return selectedPath;
     }
 
-    private static ArrayList<Integer> getPredictedTruthWeights(Network network){
+    private static Path findFattestPath(Network network) {
+        //System.out.println(network.toString());
+        ArrayList<Integer> sortedNodes = network.topoSort();
+        int flow[] = new int[network.numNodes()];
+        Edge edges[] = new Edge[network.numNodes()];
+        for (int i = 0; i < flow.length; i++) {
+            flow[i] = -1;
+            edges[i] = null;
+        }
+        for (int u : sortedNodes) {
+            for (Edge e : network.getNode(u).getOutgoingEdges()) {
+                int v = e.getToNode().getId();
+                int weight = e.getWeight();
+                if (weight < flow[u] || flow[u] < 0) {
+                    if (weight >= flow[v]) {
+                        flow[v] = weight;
+                        edges[v] = e;
+                    }
+                } else {
+                    if (flow[u] >= flow[v]) {
+                        flow[v] = flow[u];
+                        edges[v] = e;
+                    }
+                }
+            }
+        }
+        ArrayList<Edge> pathEdges = new ArrayList<>();
+        Edge e = edges[edges.length - 1];
+        while (e != null) {
+            pathEdges.add(e);
+            e = edges[e.getFromNode().getId()];
+        }
+        return new Path(pathEdges);
+
+    }
+
+        private static ArrayList<Integer> getPredictedTruthWeights(Network network){
         ArrayList[] stackHolder = new ArrayList[network.numNodes()];
         for(int i = 0; i < stackHolder.length; i++){
             stackHolder[i] = new ArrayList<Integer>();

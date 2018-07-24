@@ -45,6 +45,13 @@ public class Network {
         toNode.addIncomingEdge(newEdge);
     }
 
+    public void addEdge(Node fromNode, Node toNode, int weight, String newLabel){
+        Edge newEdge = new Edge(fromNode, toNode, weight, edges.size(), newLabel);
+        edges.add(newEdge);
+        fromNode.addEdge(newEdge);
+        toNode.addIncomingEdge(newEdge);
+    }
+
     public void addEdge(Node fromNode, Node toNode, int weight, int id){
         Edge newEdge = new Edge(fromNode, toNode, weight, id);
         edges.add(newEdge);
@@ -154,12 +161,28 @@ public class Network {
         Node toNode = node.getToNodes().get(0);
         Edge outGoing = getEdge(node, toNode);
         Edge inComing = getEdge(fromNode, node);
-        addEdge(fromNode, toNode, inComing.getWeight());
+        addEdge(fromNode, toNode, inComing.getWeight(), inComing.getLabel());
         removeEdge(outGoing);
         removeEdge(inComing);
         //System.out.println("UPDATED: " + node.printEdges());
         //System.out.println("fromNode = " + fromNode.printEdges());
         //System.out.println("toNode = " + toNode.printEdges());
+    }
+
+    public void assignEdgeLetters() {
+        String[] letters = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+                            "aa", "ab", "ac", "ad", "ae", "af", "ag", "ah", "ai", "aj", "ak", "al", "am", "an", "ao", "ap", "aq", "ar", "as", "at", "au", "av", "aw", "ax", "ay", "az",
+                            "ba", "bb", "bc", "bd", "be", "bf", "bg", "bh", "bi", "bj", "bk", "bl", "bm", "bn", "bo", "bp", "bq", "br", "bs", "bt", "bu", "bv", "bw", "bx", "by", "bz",
+                            "ca", "cb", "cc", "cd", "ce", "cf", "cg", "ch", "ci", "cj", "ck", "cl", "cm", "cn", "co", "cp", "cq", "cr", "cs", "ct", "cu", "cv", "cw", "cx", "cy", "cz",
+                            "da", "db", "dc", "dd", "de", "df", "dg", "dh", "di", "dj", "dk", "dl", "dm", "dn", "do", "dp", "dq", "dr", "ds", "dt", "du", "dv", "dw", "dx", "dy", "dz",
+                            "ea", "eb", "ec", "ed", "ee", "ef", "eg", "eh", "ei", "ej", "ek", "el", "em", "en", "eo", "ep", "eq", "er", "es", "et", "eu", "ev", "ew", "ex", "ey", "ez"};
+        int i = 0;
+        for(int nodeId : topoSort()) {
+            for(Edge e : getNode(nodeId).getOutgoingEdges()) {
+                e.setLabel(letters[i]);
+                i++;
+            }
+        }
     }
 
 
@@ -339,7 +362,7 @@ public class Network {
                 int fromNodeId = e.getFromNode().getId();
                 int toNodeId = e.getToNode().getId();
                 int weight = e.getWeight();
-                out.printf("\t%d -> %d [label=\"%d\"]\n", fromNodeId, toNodeId, weight);
+                out.printf("\t%d -> %d [label=\"%s - %d\"]\n", fromNodeId, toNodeId, e.getLabel(), weight);
             }
 
             out.println("}");
@@ -366,7 +389,7 @@ public class Network {
                 int weight = e.getWeight();
                 String color = "black";
                 if(pathEdges.contains(e)) color = "red";
-                out.printf("\t%d -> %d [label=\"%d\", color=\"%s\"]\n", fromNodeId, toNodeId, weight, color);
+                out.printf("\t%d -> %d [label=\"%s - %d\", color=\"%s\"]\n", fromNodeId, toNodeId, e.getLabel(), weight, color);
             }
 
             out.println("}");

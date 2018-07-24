@@ -4,12 +4,29 @@ public class Edge {
     private Node fromNode;
     private int count;
     private int id;
+    private String label;
 
     public Edge(Node FromNode, Node ToNode, int edgeWeight, int newId) {
         weight = edgeWeight;
         toNode = ToNode;
         fromNode = FromNode;
         id = newId;
+    }
+
+    public Edge(Node FromNode, Node ToNode, int edgeWeight, int newId, String newLabel) {
+        weight = edgeWeight;
+        toNode = ToNode;
+        fromNode = FromNode;
+        id = newId;
+        label = newLabel;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String newLabel) {
+        label = newLabel;
     }
 
     public int getId() {
@@ -45,7 +62,8 @@ public class Edge {
     }
 
     public String toString() {
-        return "Edge " + id + ": " + fromNode.toString() + " -> " + toNode.toString() + " (Weight = " + weight+", Count = "+count+")";
+        //return "Edge " + id + ": " + fromNode.toString() + " -> " + toNode.toString() + " (Weight = " + weight+", Count = "+count+")";
+        return getLabel();
     }
 
 
