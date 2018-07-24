@@ -15,8 +15,8 @@ public class Main {
                 out = new PrintWriter(new File("outputFile.txt"));
                 File dir = new File(directory + "/" + animal);
                 File[] files = dir.listFiles();
-                for (int i = 0; i < 100; i++) resultBins[i] = 0;
-                for (int i = 0; i < 100; i++) totals[i] = 0;
+                for (int i = 0; i < 101; i++) resultBins[i] = 0;
+                for (int i = 0; i < 101; i++) totals[i] = 0;
                 for (File curFile : files) {
                     int pos = curFile.getName().lastIndexOf(".");
                     String ext = curFile.getName().substring(pos + 1);
@@ -32,6 +32,11 @@ public class Main {
                             try {// sometimes in salmon there are graphs that overload the stack so this try catch is implemented to deal with that
                                 //currently is just skips the graph so report on that when writing
                                 network.collapseEdges2();
+                                for (int i = 0; i < 7; i++) {
+                                    //collapse down the network as much as possible before removing any edges
+                                    network.breakItDown();
+                                    network.uglyBanana();
+                                }
                                 for (int i = 0; i < 7; i++) {
                                     //collapse down the network as much as possible before removing any edges
                                     network.breakItDown();
@@ -95,6 +100,7 @@ public class Main {
                 out.close();
             }
             System.out.printf("\n# Paths\tSuccess Rate\n");
+            //loop changes the scope of the answers shown
             for (int i = 0; i < 10; i++) {
                 double successRate = ((double) resultBins[i] / totals[i]) * 100;
                 System.out.printf("%d\t\t%.2f\n", i + 1, successRate);
@@ -306,4 +312,19 @@ public class Main {
         network.breakItDown();
         network.uglyBanana();
     }
+    private static void reversal(Network network){
+        for(int i = 0; i < network.numNodes(); i++){
+            Node m = network.identifySubgraph(network.getNode(i));
+            if(m == null) continue;
+            network.reverseGraph(network.getNode(i), m);
+            break;
+        }
+    }
+    private static void reversalGivenNode(Network network, Node node){
+            Node m = network.identifySubgraph(node);
+            if(m != null) {
+                network.reverseGraph(node, m);
+            }
+    }
+
 }

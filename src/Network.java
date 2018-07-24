@@ -12,6 +12,14 @@ public class Network {
         nodes.add(new Node(nodes.size()));
     }
 
+    public void addEdge(Edge e) {
+        Node fromNode = e.getFromNode();
+        Node toNode = e.getToNode();
+        edges.add(e);
+        fromNode.addEdge(e);
+        toNode.addIncomingEdge(e);
+    }
+
     public void addEdge(Node fromNode, Node toNode, int weight) {
         Edge newEdge = new Edge(fromNode, toNode, weight);
         edges.add(newEdge);
@@ -573,5 +581,71 @@ public class Network {
         if (grid[n-1][sum] == false) return;
         ArrayList<Integer> p = new ArrayList<>();
         printSubsetsRec(arr, n-1, sum, p);
+    }
+
+    static ArrayList<Integer> findCompliments(ArrayList<Integer> originalSet){
+        ArrayList<Integer> compliments = new ArrayList<>();
+        compliments.addAll(originalSet);
+        Collections.reverse(compliments);
+        return compliments;
+    }
+
+    public Node identifySubgraph(Node startNode){
+        ArrayList<Integer> topoSorted = topoSort();
+        ArrayList<Integer> toCheck = new ArrayList<>();
+        ArrayList<Edge> edgeToCheck = new ArrayList<>();
+        boolean checker = false;
+        for(int i : topoSorted) if(i > startNode.getId()) toCheck.add(i);
+        Collections.sort(toCheck);
+        Collections.reverse(toCheck);
+        for(int i : toCheck){
+            ArrayList<Integer> addEdges = new ArrayList<>();
+            addEdges.addAll(toCheck);
+            addEdges.remove(new Integer(i));
+            for(int j : addEdges){
+                edgeToCheck.addAll(getNode(j).getOutgoingEdges());
+                edgeToCheck.addAll(getNode(j).getIncomingEdges());
+            }
+            for(Edge e : edgeToCheck){
+                if(e.getToNode().getId() > i || e.getFromNode().getId() < startNode.getId()){
+                    checker = true;
+                    break;
+                }
+            }
+            if(checker) {
+                checker = false;
+                continue;
+            }
+            return getNode(i);
+        }
+        return null;
+    }
+
+    public void reverseGraph(Node one, Node two){
+        ArrayList<Integer> topoSorted = topoSort();
+        int oneId = one.getId();
+        int twoId = two.getId();
+        ArrayList<Edge> toAdd = new ArrayList<>();
+        ArrayList<Edge> toRemove = new ArrayList<>();
+        ArrayList<Integer> toReverse = new ArrayList<>();
+        for(int id : topoSorted) if(id <= twoId && id >= oneId) toReverse.add(id);
+        Collections.sort(toReverse);
+        ArrayList<Integer> compliments = findCompliments(toReverse);
+        //now they are the reverse numbers of each other
+        for(int currentNode : toReverse){
+            for(Edge e : getNode(currentNode).getOutgoingEdges()){
+                int start = currentNode;
+                int end = e.getToNode().getId();
+                int weight = e.getWeight();
+                int startIndex = toReverse.indexOf(new Integer(start));
+                int endIndex = toReverse.indexOf(new Integer(end));
+                int newStart = compliments.get(endIndex);
+                int newEnd = compliments.get(startIndex);
+                toAdd.add(new Edge(getNode(newStart), getNode(newEnd), weight));
+                toRemove.add(e);
+            }
+        }
+        for(Edge e : toRemove) removeEdge(e);
+        for(Edge e : toAdd) addEdge(e);
     }
 }
