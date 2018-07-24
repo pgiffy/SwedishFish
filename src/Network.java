@@ -179,6 +179,11 @@ public class Network {
         int i = 0;
         for(int nodeId : topoSort()) {
             for(Edge e : getNode(nodeId).getOutgoingEdges()) {
+                if(i > 156) {
+                    e.setLabel("#");
+                    continue;
+                }
+
                 e.setLabel(letters[i]);
                 i++;
             }
@@ -220,6 +225,29 @@ public class Network {
     }
 
     public void collapseEdges() {
+        ArrayList<Node> toRemove = new ArrayList<>();
+        for(Node node: nodes) {
+            if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
+                removeNode(node);
+            }
+        }
+
+        //remove & renumber nodes
+        int i = 0;
+        ArrayList<Node> tempNodes = new ArrayList<>();
+        tempNodes.addAll(nodes);
+        for(Node n: nodes) {
+            if(n.numOutgoingEdges() == 0 && n.numIncomingEdges() == 0) {
+                tempNodes.remove(n);
+            } else {
+                n.setId(i);
+                i++;
+            }
+        }
+        nodes = tempNodes;
+    }
+
+    public void collapseEdges2() {
         ArrayList<Node> toRemove = new ArrayList<>();
         for(Node node: nodes) {
             if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
@@ -357,6 +385,7 @@ public class Network {
             out = new PrintWriter(outputFile);
 
             out.println("digraph G {");
+            out.printf("\trankdir=\"LR\"\n");
 
             for(Edge e: edges) {
                 int fromNodeId = e.getFromNode().getId();
@@ -382,6 +411,7 @@ public class Network {
             out = new PrintWriter(outputFile);
 
             out.println("digraph G {");
+            out.printf("\trankdir=\"LR\"\n");
 
             for(Edge e: edges) {
                 int fromNodeId = e.getFromNode().getId();

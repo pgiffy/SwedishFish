@@ -19,7 +19,7 @@ public class Main {
 
         ArrayList<Network> networks;
         if(importMode.equals("multiple")) {
-            String animal = "salmon";
+            String animal = "human";
             boolean debug = false;
             PrintWriter out = null;
             int[] resultBins = new int[100];
@@ -80,7 +80,7 @@ public class Main {
                                     if (debug) network.printDOT("test/" + x + ".dot", toReduce.getEdges());
                                     x++;
                                     network.reducePath(toReduce);
-                                    network.collapseEdges();
+                                    network.collapseEdges2();
                                     if (debug) network.printDOT("graph2.dot");
                                 }
                             }
@@ -197,7 +197,7 @@ public class Main {
             }
         }
 
-        //Break ties by choosing the path with the least number of duplicates
+        //Break ties by choosing the path with the least amount of uncertainty
         HashMap<String, Integer> duplicates = new HashMap<>();
         for(Object item : data[lastNodeId]) {
             HashMap<String, Object> item2 = (HashMap<String, Object>) item;
@@ -238,6 +238,7 @@ public class Main {
             }
         }
 
+        ArrayList<Path> possiblePaths2 = new ArrayList<>();
         for(Path p : possiblePaths) {
             int pathWeight = p.getWeight();
             int numTruthEdges = 0;
@@ -247,11 +248,59 @@ public class Main {
                 }
             }
 
-            if(numTruthEdges < minNumTruthEdges || minNumTruthEdges < 0) {
+            if(numTruthEdges <= minNumTruthEdges || minNumTruthEdges < 0) {
+                if(numTruthEdges < minNumTruthEdges) possiblePaths2.clear();
                 minNumTruthEdges = numTruthEdges;
-                selectedPath = p;
+                possiblePaths2.add(p);
             }
         }
+
+        //3rd tie-breaker: take the path that has the least number of distinct edge weights
+        /*
+        ArrayList<Integer> foundWeights = new ArrayList<>();
+        ArrayList<Path> possiblePaths3 = new ArrayList<>();
+        int minNumFoundWeights = -1;
+        System.out.println("***");
+        for(Path p : possiblePaths2) {
+            foundWeights.clear();
+            for(Edge e : p.getEdges()) {
+                if(!foundWeights.contains(e.getWeight())) {
+                    foundWeights.add(e.getWeight());
+                }
+            }
+
+            if(foundWeights.size() <= minNumFoundWeights || minNumFoundWeights < 0) {
+                if(foundWeights.size() != minNumFoundWeights) possiblePaths3.clear();
+                possiblePaths3.add(p);
+                minNumFoundWeights = foundWeights.size();
+            }
+        }
+        */
+
+        //4th tie-breaker: take the path that contains the least number of truth-weights *after subtracting
+        //each individual truth weight
+        int minCount = -1;
+        if(possiblePaths2.size() > 1) {
+            for(Path p : possiblePaths2) {
+                int count = 0;
+                for(Edge e : p.getEdges()) {
+                    for (int truthWeight : predictedTruthWeights) {
+                        if(truthWeight == p.getWeight()) continue;
+                        int testWeight = e.getWeight() - truthWeight;
+                        if(predictedTruthWeights.contains(testWeight) && p.getWeight() != testWeight) count++;
+                    }
+                }
+
+                if(count < minCount || minCount < 0) {
+                    selectedPath = p;
+                    minCount = count;
+                }
+            }
+        } else {
+            selectedPath = possiblePaths2.get(0);
+        }
+
+        //System.out.println(selectedPath.getEdges().toString());
 
 
         return selectedPath;
@@ -338,6 +387,10 @@ public class Main {
 
         return bestList;
 
+    }
+
+    private static Network reconstructNetwork(Network origNetwork, ArrayList<Path> paths) {
+        return null;
     }
 
     private static HashMap<Integer, Integer> getWeightFrequencies(Network network) {
