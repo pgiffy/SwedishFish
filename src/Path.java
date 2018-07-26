@@ -56,6 +56,35 @@ public class Path {
         return edges;
     }
 
+    public void replaceEdge(Edge e, ArrayList<Edge> newEdges) {
+        edges.remove(e);
+        System.out.println("remove " + e.toString());
+        for(Edge newEdge : newEdges) {
+            System.out.println(edges.toString());
+            if(!listContainsEdge(edges, newEdge)) {
+                System.out.println("add " + newEdge.toString());
+                edges.add(newEdge);
+            }
+            System.out.println();
+        }
+    }
+
+    private boolean listContainsEdge(ArrayList<Edge> edgeList, Edge edge) {
+        int weight = edge.getWeight();
+        Node toNode = edge.getToNode();
+        Node fromNode = edge.getFromNode();
+        String label = edge.getLabel();
+
+        for(Edge e : edgeList) {
+            if(e.getLabel().equals(label)) {
+                System.out.println("edge found: " + e.toString());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public int getFlow() {return flow;}
 
     public int getArea() {return area;}

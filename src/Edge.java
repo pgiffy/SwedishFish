@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Edge {
     private int weight;
     private Node toNode;
@@ -5,12 +7,14 @@ public class Edge {
     private int count;
     private int id;
     private String label;
+    private ArrayList<Edge> removedEdges;
 
     public Edge(Node FromNode, Node ToNode, int edgeWeight, int newId) {
         weight = edgeWeight;
         toNode = ToNode;
         fromNode = FromNode;
         id = newId;
+        removedEdges = new ArrayList<>();
     }
 
     public Edge(Node FromNode, Node ToNode, int edgeWeight, int newId, String newLabel) {
@@ -19,6 +23,25 @@ public class Edge {
         fromNode = FromNode;
         id = newId;
         label = newLabel;
+        removedEdges = new ArrayList<>();
+    }
+
+    public Edge(Node FromNode, Node ToNode, int edgeWeight, int newId, String newLabel, ArrayList<Edge> newRemovedEdges) {
+        weight = edgeWeight;
+        toNode = ToNode;
+        fromNode = FromNode;
+        id = newId;
+        label = newLabel;
+        removedEdges = new ArrayList<>();
+        removedEdges.addAll(newRemovedEdges);
+    }
+
+    public void addRemovedEdge(Edge e) {
+        removedEdges.add(e);
+    }
+
+    public ArrayList<Edge> getRemovedEdges() {
+        return removedEdges;
     }
 
     public String getLabel() {

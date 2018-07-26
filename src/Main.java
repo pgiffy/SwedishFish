@@ -19,8 +19,8 @@ public class Main {
 
         ArrayList<Network> networks;
         if(importMode.equals("multiple")) {
-            String animal = "human";
-            boolean debug = false;
+            String animal = "test";
+            boolean debug = true;
             PrintWriter out = null;
             int[] resultBins = new int[100];
             int[] totals = new int[100];
@@ -55,8 +55,16 @@ public class Main {
                         int count = 0;
                         ArrayList<Path> paths = new ArrayList<>();
                         for(Network network: networks) {
-                            network.collapseEdges();
                             network.assignEdgeLetters();
+                            Network expandedNetwork = new Network(network);
+                            if(debug) network.printDOT("beforeCollapse.dot");
+                            network.collapseEdges();
+                            /* */
+                            ArrayList<Edge> eList = network.getEdges();
+                            for(Edge e : eList) {
+                                System.out.println(e.toString() + ": " + e.getRemovedEdges().toString());
+                            }
+                            /* */
                             paths.clear();
                             if(network.numEdges() > 60) {
 
@@ -80,13 +88,29 @@ public class Main {
                                     if (debug) network.printDOT("test/" + x + ".dot", toReduce.getEdges());
                                     x++;
                                     network.reducePath(toReduce);
-                                    network.collapseEdges2();
+                                    network.collapseEdges();
                                     if (debug) network.printDOT("graph2.dot");
                                 }
                             }
 
                             int numPaths = paths.size();
 
+                            //print paths to graphviz files
+                            ArrayList<Path> expandedPaths = new ArrayList<>();
+                            for(Path p : paths) {
+                                ArrayList<Edge> expandedEdgeList = new ArrayList<>();
+                                for(Edge e : p.getEdges()) {
+                                    expandedEdgeList.addAll(e.getRemovedEdges());
+                                }
+                                Path expandedPath = new Path(expandedEdgeList);
+                                expandedPaths.add(expandedPath);
+                            }
+
+                            int i = 1;
+                            for(Path p : expandedPaths) {
+                                expandedNetwork.printDOT("test/e"+i+".dot", p.getEdges());
+                                i++;
+                            }
 
                             //print results
                             int truthPaths = numTruthPaths.get(count);
@@ -178,8 +202,10 @@ public class Main {
                 }
 
             }
+
             //System.out.println(nodeId+": "+thisNodeData.toString());
         }
+
 
         //find path that will remove largest # edges
         int lastNodeId = network.numNodes()-1;
@@ -222,9 +248,6 @@ public class Main {
             }
         }
 
-        //2nd tie-breaker: take the path with the least number of predicted truth weights
-                            // (that aren't the path weight)
-        int minNumTruthEdges = -1;
         ArrayList<Path> possiblePaths = new ArrayList<>();
         for(String id : idList) {
 
@@ -238,8 +261,27 @@ public class Main {
             }
         }
 
-        ArrayList<Path> possiblePaths2 = new ArrayList<>();
+        //System.out.println(possiblePaths.toString());
+        //System.out.println(predictedTruthWeights.toString());
+
+        //1.5 tie-breaker: take paths that match a predicted truth weight
+        ArrayList<Path> possiblePaths1 = new ArrayList<>();
         for(Path p : possiblePaths) {
+            if(predictedTruthWeights.contains(p.getWeight())) {
+                possiblePaths1.add(p);
+            }
+        }
+
+        if(possiblePaths1.isEmpty()) {
+            possiblePaths1.addAll(possiblePaths);
+        }
+
+        //2nd tie-breaker: take the path with the least number of predicted truth weights
+                            // (that aren't the path weight)
+
+        int minNumTruthEdges = -1;
+        ArrayList<Path> possiblePaths2 = new ArrayList<>();
+        for(Path p : possiblePaths1) {
             int pathWeight = p.getWeight();
             int numTruthEdges = 0;
             for(Edge e : p.getEdges()) {

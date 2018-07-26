@@ -29,13 +29,19 @@ public class Network {
             Node toNode = getNode(oldToId);
             int weight = e.getWeight();
             int id = e.getId();
-            addEdge(fromNode, toNode, weight, id);
+            String label = e.getLabel();
+            ArrayList<Edge> removedEdges = e.getRemovedEdges();
+            addEdge(fromNode, toNode, weight, label, removedEdges);
         }
 
     }
 
     public void addNode(){
         nodes.add(new Node(nodes.size()));
+    }
+
+    public void addNode(Node n) {
+        nodes.add(new Node(n));
     }
 
     public void addEdge(Node fromNode, Node toNode, int weight){
@@ -45,8 +51,8 @@ public class Network {
         toNode.addIncomingEdge(newEdge);
     }
 
-    public void addEdge(Node fromNode, Node toNode, int weight, String newLabel){
-        Edge newEdge = new Edge(fromNode, toNode, weight, edges.size(), newLabel);
+    public void addEdge(Node fromNode, Node toNode, int weight, String newLabel, ArrayList<Edge> removedEdges){
+        Edge newEdge = new Edge(fromNode, toNode, weight, edges.size(), newLabel, removedEdges);
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
         toNode.addIncomingEdge(newEdge);
@@ -57,6 +63,17 @@ public class Network {
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
         toNode.addIncomingEdge(newEdge);
+    }
+
+    public ArrayList<Edge> expandEdge(Edge e) {
+        for(Edge removedEdge : e.getRemovedEdges()) {
+            Node toNode = removedEdge.getToNode();
+            Node fromNode = removedEdge.getFromNode();
+            if(!getNodes().contains(toNode)) addNode(toNode);
+            if(!getNodes().contains(fromNode)) addNode(fromNode);
+        }
+
+        return e.getRemovedEdges();
     }
 
     public void reducePath(Path toReduce) {
@@ -161,7 +178,20 @@ public class Network {
         Node toNode = node.getToNodes().get(0);
         Edge outGoing = getEdge(node, toNode);
         Edge inComing = getEdge(fromNode, node);
-        addEdge(fromNode, toNode, inComing.getWeight(), inComing.getLabel());
+
+        ArrayList<Edge> removedEdges = new ArrayList<>();
+        removedEdges.add(outGoing);
+        removedEdges.add(inComing);
+
+        for(Edge removedIncoming : inComing.getRemovedEdges()) {
+            if(!listContainsEdge(removedEdges, removedIncoming)) removedEdges.add(removedIncoming);
+        }
+
+        for(Edge removedOutgoing : outGoing.getRemovedEdges()) {
+            if(!listContainsEdge(removedEdges, removedOutgoing)) removedEdges.add(removedOutgoing);
+        }
+
+        addEdge(fromNode, toNode, inComing.getWeight(), inComing.getLabel(), removedEdges);
         removeEdge(outGoing);
         removeEdge(inComing);
         //System.out.println("UPDATED: " + node.printEdges());
@@ -179,7 +209,7 @@ public class Network {
         int i = 0;
         for(int nodeId : topoSort()) {
             for(Edge e : getNode(nodeId).getOutgoingEdges()) {
-                if(i > 156) {
+                if(i > 155) {
                     e.setLabel("#");
                     continue;
                 }
@@ -225,29 +255,6 @@ public class Network {
     }
 
     public void collapseEdges() {
-        ArrayList<Node> toRemove = new ArrayList<>();
-        for(Node node: nodes) {
-            if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
-                removeNode(node);
-            }
-        }
-
-        //remove & renumber nodes
-        int i = 0;
-        ArrayList<Node> tempNodes = new ArrayList<>();
-        tempNodes.addAll(nodes);
-        for(Node n: nodes) {
-            if(n.numOutgoingEdges() == 0 && n.numIncomingEdges() == 0) {
-                tempNodes.remove(n);
-            } else {
-                n.setId(i);
-                i++;
-            }
-        }
-        nodes = tempNodes;
-    }
-
-    public void collapseEdges2() {
         ArrayList<Node> toRemove = new ArrayList<>();
         for(Node node: nodes) {
             if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
@@ -377,6 +384,22 @@ public class Network {
         return toReturn;
     }
 
+    private boolean listContainsEdge(ArrayList<Edge> edgeList, Edge edge) {
+        int weight = edge.getWeight();
+        Node toNode = edge.getToNode();
+        Node fromNode = edge.getFromNode();
+        String label = edge.getLabel();
+
+        for(Edge e : edgeList) {
+            if(e.getLabel().equals(label)) {
+                System.out.println("edge found: " + e.toString());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void printDOT(String filename) {
         File outputFile = new File(filename);
         PrintWriter out = null;
@@ -418,7 +441,7 @@ public class Network {
                 int toNodeId = e.getToNode().getId();
                 int weight = e.getWeight();
                 String color = "black";
-                if(pathEdges.contains(e)) color = "red";
+                if(listContainsEdge(pathEdges, e)) color = "red";
                 out.printf("\t%d -> %d [label=\"%s - %d\", color=\"%s\"]\n", fromNodeId, toNodeId, e.getLabel(), weight, color);
             }
 

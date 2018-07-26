@@ -16,8 +16,15 @@ public class Node {
     }
 
 
+
     public Node(int nodeId){
         id = nodeId;
+    }
+
+    public Node(Node n) {
+        id = n.getId();
+        outgoingEdges = n.getOutgoingEdges();
+        incomingEdges = n.getIncomingEdges();
     }
 
     public void addEdge(Edge newEdge){
