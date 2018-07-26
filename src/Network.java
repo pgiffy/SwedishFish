@@ -230,7 +230,21 @@ public class Network {
                 findAllSubsets(arrayIncoming, n, twoWeight);
                 two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                if(one.isEmpty() || two.isEmpty()) continue;
+                if(one.isEmpty() || two.isEmpty()) {
+                    Node m = identifySubgraph(getNode(i));
+                    if(m != null){
+                        reverseGraph(getNode(i), m);
+                        findAllSubsets(arrayIncoming, n, oneWeight);
+                        one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        findAllSubsets(arrayIncoming, n, twoWeight);
+                        two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        if(one.isEmpty() || two.isEmpty()) continue;
+                    }else{
+                        continue;
+                    }
+                }
                 ArrayList<Integer> all = new ArrayList<>();
                 boolean checker = false;
                 ArrayList<Edge> oneEdges = new ArrayList<>();
@@ -298,7 +312,21 @@ public class Network {
                 findAllSubsets(arrayOutgoing, n, twoWeight);
                 two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                if(one.isEmpty() || two.isEmpty()) continue;
+                if(one.isEmpty() || two.isEmpty()) {
+                    Node m = identifySubgraphBackToFront(getNode(i));
+                    if(m != null){
+                        reverseGraph(getNode(i), m);
+                        findAllSubsets(arrayOutgoing, n, oneWeight);
+                        one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        findAllSubsets(arrayOutgoing, n, twoWeight);
+                        two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        if(one.isEmpty() || two.isEmpty()) continue;
+                    }else{
+                        continue;
+                    }
+                }
                 ArrayList<Integer> all = new ArrayList<>();
                 boolean checker = false;
                 ArrayList<Edge> oneEdges = new ArrayList<>();
@@ -376,7 +404,24 @@ public class Network {
                 findAllSubsets(arrayIncoming, n, threeWeight);
                 three = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                if(one.isEmpty() || two.isEmpty() || three.isEmpty()) continue;
+                if(one.isEmpty() || two.isEmpty() || three.isEmpty()) {
+                    Node m = identifySubgraph(getNode(i));
+                    if(m != null){
+                        reverseGraph(getNode(i), m);
+                        findAllSubsets(arrayIncoming, n, oneWeight);
+                        one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        findAllSubsets(arrayIncoming, n, twoWeight);
+                        two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        findAllSubsets(arrayIncoming, n, threeWeight);
+                        three = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        if(one.isEmpty() || two.isEmpty() || three.isEmpty()) continue;
+                    }else{
+                        continue;
+                    }
+                }
                 ArrayList<Integer> all = new ArrayList<>();
                 boolean checker = false;
                 ArrayList<Edge> oneEdges = new ArrayList<>();
@@ -466,7 +511,24 @@ public class Network {
                 findAllSubsets(arrayOutgoing, n, threeWeight);
                 three = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
                 allSubsets.clear();
-                if(one.isEmpty() || two.isEmpty() || three.isEmpty()) continue;
+                if(one.isEmpty() || two.isEmpty() || three.isEmpty()) {
+                    Node m = identifySubgraphBackToFront(getNode(i));
+                    if(m != null){
+                        reverseGraph(getNode(i), m);
+                        findAllSubsets(arrayOutgoing, n, oneWeight);
+                        one = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        findAllSubsets(arrayOutgoing, n, twoWeight);
+                        two = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        findAllSubsets(arrayOutgoing, n, threeWeight);
+                        three = (ArrayList<ArrayList<Integer>>) allSubsets.clone();
+                        allSubsets.clear();
+                        if(one.isEmpty() || two.isEmpty() || three.isEmpty()) continue;
+                    }else{
+                        continue;
+                    }
+                }
                 ArrayList<Integer> all = new ArrayList<>();
                 boolean checker = false;
                 ArrayList<Edge> oneEdges = new ArrayList<>();
@@ -600,8 +662,7 @@ public class Network {
         Collections.reverse(toCheck);
         for(int i : toCheck){
             ArrayList<Integer> addEdges = new ArrayList<>();
-            addEdges.addAll(toCheck);
-            addEdges.remove(new Integer(i));
+            for(int j : toCheck) if(j < i) addEdges.add(j);
             for(int j : addEdges){
                 edgeToCheck.addAll(getNode(j).getOutgoingEdges());
                 edgeToCheck.addAll(getNode(j).getIncomingEdges());
@@ -620,6 +681,36 @@ public class Network {
         }
         return null;
     }
+
+    public Node identifySubgraphBackToFront(Node endNode){
+        ArrayList<Integer> topoSorted = topoSort();
+        ArrayList<Integer> toCheck = new ArrayList<>();
+        ArrayList<Edge> edgeToCheck = new ArrayList<>();
+        boolean checker = false;
+        for(int i : topoSorted) if(i < endNode.getId()) toCheck.add(i);
+        Collections.sort(toCheck);
+        for(int i : toCheck){
+            ArrayList<Integer> addEdges = new ArrayList<>();
+            for(int j : toCheck) if(j > i) addEdges.add(j);
+            for(int j : addEdges){
+                edgeToCheck.addAll(getNode(j).getOutgoingEdges());
+                edgeToCheck.addAll(getNode(j).getIncomingEdges());
+            }
+            for(Edge e : edgeToCheck){
+                if(e.getToNode().getId() > endNode.getId() || e.getFromNode().getId() < i){
+                    checker = true;
+                    break;
+                }
+            }
+            if(checker) {
+                checker = false;
+                continue;
+            }
+            return getNode(i);
+        }
+        return null;
+    }
+
 
     public void reverseGraph(Node one, Node two){
         ArrayList<Integer> topoSorted = topoSort();

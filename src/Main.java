@@ -37,12 +37,15 @@ public class Main {
                                     network.breakItDown();
                                     network.uglyBanana();
                                 }
-                                for (int i = 0; i < 7; i++) {
+                                reversal(network);
+                                for (int i = 0; i < 2; i++) {
                                     //collapse down the network as much as possible before removing any edges
                                     network.breakItDown();
                                     network.uglyBanana();
                                 }
-                                for (int i = 0; i < 5; i++) rotation(network);
+                                for (int i = 0; i < 3; i++) rotation(network);
+                                reversal(network);
+                                rotation(network);
                                 ArrayList<Integer> sortedNodes;
                                 int numPaths = 0;
                                 ArrayList<Integer> valK = stackFlow(network);
@@ -57,7 +60,9 @@ public class Main {
                                         network.reducePath(selectedPath);
                                         numPaths++;
                                         network.collapseEdges2();
-                                        for (int i = 0; i < 5; i++) rotation(network);
+                                        rotation(network);
+                                        reversal(network);
+                                        rotation(network);
                                         valK = stackFlow(network);
                                         Collections.sort(valK);
                                         Collections.reverse(valK);
@@ -67,19 +72,14 @@ public class Main {
                                         numPaths++;
                                         network.collapseEdges2();
                                         rotation(network);
+                                        reversal(network);
+                                        rotation(network);
                                         valK = stackFlow(network);
                                         Collections.sort(valK);
                                         Collections.reverse(valK);
                                         if (valK.isEmpty()) break;
                                         k = valK.get(0);
                                     }
-                                }
-                                while (network.numEdges() > 0) {
-                                    Path selectedPath = findFattestPath(network);
-                                    network.reducePath(selectedPath);
-                                    numPaths++;
-                                    network.collapseEdges2();
-                                    for (int i = 0; i < 5; i++) rotation(network);
                                 }
                                 int truthPaths = numTruthPaths.get(count);
                                 //fail safe for accidentally setting numPaths to 0
@@ -303,28 +303,30 @@ public class Main {
 
     //takes in network and calls reduction methods on it
     private static void rotation(Network network){
-        network.breakItDown();
-        network.uglyBanana();
-        network.subsetGod3();
-        network.uglyBanana();
-        network.subsetGod2();
-        network.uglyBanana();
-        network.breakItDown();
-        network.uglyBanana();
+            network.breakItDown();
+            network.uglyBanana();
+            network.subsetGod3();
+            network.uglyBanana();
+            network.subsetGod2();
+            network.uglyBanana();
+            network.breakItDown();
+            network.uglyBanana();
     }
+
+    //makes all possible reversals
     private static void reversal(Network network){
         for(int i = 0; i < network.numNodes(); i++){
             Node m = network.identifySubgraph(network.getNode(i));
             if(m == null) continue;
             network.reverseGraph(network.getNode(i), m);
-            break;
+            continue;
         }
     }
+
+    //makes reversals given a certain node
     private static void reversalGivenNode(Network network, Node node){
             Node m = network.identifySubgraph(node);
-            if(m != null) {
-                network.reverseGraph(node, m);
-            }
+            if(m != null) network.reverseGraph(node, m);
     }
 
 }

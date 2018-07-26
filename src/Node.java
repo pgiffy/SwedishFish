@@ -27,14 +27,4 @@ public class Node {
     public void setId(int newId) { id = newId; }
 
     public String toString() { return "<" + id + ">"; }
-
-    public String printEdges() {
-        String str = "["+id+": ";
-        for(Edge e: incomingEdges) str += e.toString()+" ";
-        for(Edge e: outgoingEdges) str += e.toString();
-        str += "]";
-        return str;
-    }
-
-
 }
