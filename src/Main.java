@@ -29,6 +29,7 @@ public class Main {
                         System.out.print("?");
                         int count = 0;
                         for (Network network : networks) {
+                            int numPaths = 0;
                             try {// sometimes in salmon there are graphs that overload the stack so this try catch is implemented to deal with that
                                 //currently is just skips the graph so report on that when writing
                                 network.collapseEdges2();
@@ -47,7 +48,6 @@ public class Main {
                                 reversal(network);
                                 rotation(network);
                                 ArrayList<Integer> sortedNodes;
-                                int numPaths = 0;
                                 ArrayList<Integer> valK = stackFlow(network);
                                 Collections.sort(valK);
                                 Collections.reverse(valK);
@@ -81,15 +81,23 @@ public class Main {
                                         k = valK.get(0);
                                     }
                                 }
-                                int truthPaths = numTruthPaths.get(count);
-                                //fail safe for accidentally setting numPaths to 0
-                                if (numPaths == 0) numPaths = 100;
-                                out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
-                                if (numPaths <= truthPaths) resultBins[truthPaths - 1]++;
-                                count++;
                             }catch(OutOfMemoryError e){
-                                continue;
+                                //if subsets overload it just finish whats left of the graph with greedy
+                                while (network.numEdges() > 0) {
+                                    Path selectedPath = findFattestPath(network);
+                                    network.reducePath(selectedPath);
+                                    numPaths++;
+                                    network.collapseEdges2();
+                                    network.breakItDown();
+                                    network.uglyBanana();
+                                }
                             }
+                            int truthPaths = numTruthPaths.get(count);
+                            //fail safe for accidentally setting numPaths to 0
+                            if (numPaths == 0) numPaths = 100;
+                            out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
+                            if (numPaths <= truthPaths) resultBins[truthPaths - 1]++;
+                            count++;
                         }
                     }
                 }
