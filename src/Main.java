@@ -187,7 +187,8 @@ public class Main {
         }
         return bestList;
     }
-    //GREEDY
+
+    //Greedy Width
     private static Path findFattestPath(Network network) {
         //System.out.println(network.toString());
         ArrayList<Integer> sortedNodes = network.topoSort();
@@ -300,15 +301,6 @@ public class Main {
         return randomPath;
     }
 
-    //does what its called
-    private static ArrayList<Integer> removeDuplicates(ArrayList<Integer> remove){
-        Set<Integer> noDuplicate = new HashSet<>();
-        noDuplicate.addAll(remove);
-        remove.clear();
-        remove.addAll(noDuplicate);
-        return remove;
-    }
-
     //takes in network and calls reduction methods on it
     private static void rotation(Network network){
             network.breakItDown();
@@ -330,11 +322,4 @@ public class Main {
             continue;
         }
     }
-
-    //makes reversals given a certain node
-    private static void reversalGivenNode(Network network, Node node){
-            Node m = network.identifySubgraph(node);
-            if(m != null) network.reverseGraph(node, m);
-    }
-
 }
