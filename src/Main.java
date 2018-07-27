@@ -5,18 +5,32 @@ import java.io.*;
 public class Main {
 
     public static void main(String args[]) {
-            String directory = "/home/peter/Desktop/instances/rnaseq/";
+
+            String directory = "/home/dan/dev/instances/rnaseq/";
+            String animal = "test";
+            boolean debug = false;
+
             ArrayList<Network> networks;
             PrintWriter out = null;
-            int[] resultBins = new int[101];
+            int[] resultBinsGW = new int[101];
+            int[] resultBinsSF = new int[101];
             int[] totals = new int[101];
-            String animal = "human";
-            try{
+            ArrayList<Path> paths = new ArrayList<>();
+            Network expandedNetwork = null;
+
+            try {
+
                 out = new PrintWriter(new File("outputFile.txt"));
                 File dir = new File(directory + "/" + animal);
                 File[] files = dir.listFiles();
-                for (int i = 0; i < 101; i++) resultBins[i] = 0;
-                for (int i = 0; i < 101; i++) totals[i] = 0;
+                if(files == null) throw new NullPointerException();
+
+                for (int i = 0; i < 101; i++) {
+                    resultBinsGW[i] = 0;
+                    resultBinsSF[i] = 0;
+                    totals[i] = 0;
+                }
+
                 for (File curFile : files) {
                     int pos = curFile.getName().lastIndexOf(".");
                     String ext = curFile.getName().substring(pos + 1);
@@ -26,203 +40,72 @@ public class Main {
                         networks = readGraphFile(directory + "/" + animal + "/" + filename);
                         ArrayList<Integer> numTruthPaths = readTruthFile(directory + "/" + animal + "/" + filenameNoExt + ".truth");
                         for (int num : numTruthPaths) totals[num - 1]++;
-                        System.out.print("?");
+                        System.out.print(".");
+                        if(debug) out.printf("File: %s\n", filename);
+
+                        GreedyWidth greedyWidth = new GreedyWidth();
+                        SwedishFish swedishFish = new SwedishFish();
+
                         int count = 0;
                         for (Network network : networks) {
-                            int numPaths = 0;
-                            try {// sometimes in salmon there are graphs that overload the stack so this try catch is implemented to deal with that
-                                //currently is just skips the graph so report on that when writing
-                                network.collapseEdges2();
-                                for (int i = 0; i < 7; i++) {
-                                    //collapse down the network as much as possible before removing any edges
-                                    network.breakItDown();
-                                    network.uglyBanana();
-                                }
-                                reversal(network);
-                                for (int i = 0; i < 2; i++) {
-                                    //collapse down the network as much as possible before removing any edges
-                                    network.breakItDown();
-                                    network.uglyBanana();
-                                }
-                                for (int i = 0; i < 3; i++) rotation(network);
-                                reversal(network);
-                                rotation(network);
-                                ArrayList<Integer> sortedNodes;
-                                ArrayList<Integer> valK = stackFlow(network);
-                                Collections.sort(valK);
-                                Collections.reverse(valK);
-                                int k = valK.get(0);
-                                while (network.numEdges() > 0) {
-                                    sortedNodes = network.topoSort();
-                                    Path newPath = findMaxPath(network, k, sortedNodes, out);
-                                    if (newPath == null) {
-                                        Path selectedPath = findFattestPath(network);
-                                        network.reducePath(selectedPath);
-                                        numPaths++;
-                                        network.collapseEdges2();
-                                        rotation(network);
-                                        reversal(network);
-                                        rotation(network);
-                                        valK = stackFlow(network);
-                                        Collections.sort(valK);
-                                        Collections.reverse(valK);
-                                        k = valK.get(0);
-                                    } else {
-                                        network.reducePath(newPath);
-                                        numPaths++;
-                                        network.collapseEdges2();
-                                        rotation(network);
-                                        reversal(network);
-                                        rotation(network);
-                                        valK = stackFlow(network);
-                                        Collections.sort(valK);
-                                        Collections.reverse(valK);
-                                        if (valK.isEmpty()) break;
-                                        k = valK.get(0);
-                                    }
-                                }
-                            }catch(OutOfMemoryError e){
-                                //if subsets overload it just finish whats left of the graph with greedy
-                                while (network.numEdges() > 0) {
-                                    Path selectedPath = findFattestPath(network);
-                                    network.reducePath(selectedPath);
-                                    numPaths++;
-                                    network.collapseEdges2();
-                                    network.breakItDown();
-                                    network.uglyBanana();
-                                }
-                            }
+
+                            ArrayList<Path> greedyWidthPaths = greedyWidth.run(network);
+                            ArrayList<Path> swedishFishPaths = swedishFish.run(network, debug);
+                            //ArrayList<Path> swedishFishPaths = new ArrayList<>();
+
                             int truthPaths = numTruthPaths.get(count);
-                            //fail safe for accidentally setting numPaths to 0
-                            if (numPaths == 0) numPaths = 100;
-                            out.println("# Truth Paths = " + truthPaths + "\t # Actual Paths = " + numPaths);
-                            if (numPaths <= truthPaths) resultBins[truthPaths - 1]++;
+                            if(debug) out.printf("%d \t # Truth Paths = %d \t # GreedyWidth Paths = %d \t # SwedishFish Paths = %d \t \n",
+                                    count, truthPaths, greedyWidthPaths.size(), swedishFishPaths.size());
+
+                            if (greedyWidthPaths.size() <= truthPaths) resultBinsGW[truthPaths - 1]++;
+                            if (swedishFishPaths.size() <= truthPaths) resultBinsSF[truthPaths - 1]++;
                             count++;
                         }
                     }
                 }
+
             } catch (FileNotFoundException e) {
                 System.out.println("Could not open output file.");
                 e.printStackTrace();
+            } catch (NullPointerException e) {
+                System.out.println("Could not find any files in chosen directory.");
+                e.printStackTrace();
             } finally {
-                out.close();
+                if(out != null) out.close();
             }
-            System.out.printf("\n# Paths\tSuccess Rate\n");
-            //loop changes the scope of the answers shown
-            for (int i = 0; i < 10; i++) {
-                double successRate = ((double) resultBins[i] / totals[i]) * 100;
-                System.out.printf("%d\t\t%.2f\n", i + 1, successRate);
-            }
-    }
 
-    //finds longest path by edge number
-    private static Path findMaxPath(Network network, int k, ArrayList<Integer> sortedNodes, PrintWriter out) {
-        int[] lengths = new int[network.numNodes()];
-        Edge[] selectedEdges = new Edge[network.numNodes()];
-        for(int i = 0; i < lengths.length; i++) lengths[i] = -1;
-        for(int i = 0; i < selectedEdges.length; i++) selectedEdges[i] = null;
-        lengths[0] = 0;
-        //System.out.println(sortedNodes);
-        for(int nodeId: sortedNodes) {
-            Node node = network.getNode(nodeId);
-            for(Edge e: node.getOutgoingEdges()) {
-                int weight = e.getWeight();
-                int newLength = 1 + lengths[nodeId];
-                int toNodeId = e.getToNode().getId();
-                if(weight >= k && newLength >= lengths[toNodeId]) {
-                    //take smaller weight as tie-breaker
-                    if(newLength == lengths[toNodeId] && weight > selectedEdges[toNodeId].getWeight()) continue;
-                    lengths[toNodeId] = newLength;
-                    selectedEdges[toNodeId] = e;
+
+        //print paths to graphviz files
+        //recommended to only run on 1 graph at a time
+        if(debug) {
+            ArrayList<Path> expandedPaths = new ArrayList<>();
+            for (Path p : paths) {
+                ArrayList<Edge> expandedEdgeList = new ArrayList<>();
+                for (Edge e : p.getEdges()) {
+                    expandedEdgeList.addAll(e.getRemovedEdges());
                 }
+                Path expandedPath = new Path(expandedEdgeList);
+                expandedPaths.add(expandedPath);
             }
-        }
-        int count = 0;
-        int i = selectedEdges.length-1;
-        Stack<Edge> edgesReverse = new Stack<>();
-        while(i > 0) {
-            Edge e = selectedEdges[i];
-            if(e == null) return null;
-            Node fromNode = e.getFromNode();
-            i = fromNode.getId();
-            edgesReverse.push(e);
-            count++;
-            if(count > selectedEdges.length) return null;
-        }
-        ArrayList<Edge> selectedEdges2 = new ArrayList<>();
-        while(!edgesReverse.empty()) {
-            Edge e = edgesReverse.pop();
-            selectedEdges2.add(e);
-        }
-        //out.printf("MAX PATH (Flow %d) = " + Arrays.toString(lengths)+"\n" + Arrays.toString(selectedEdges)+"\n", k);
-        return new Path(selectedEdges2, k);
-    }
 
-    private static ArrayList<Integer> stackFlow(Network network){
-        //finds the greatest stack of edges crossing the same point in the set of topologically sorted nodes and their edges
-        ArrayList[] stackHolder = new ArrayList[network.numNodes()];
-        for(int i = 0; i < stackHolder.length; i++) stackHolder[i] = new ArrayList<Integer>();
-        for(Edge e: network.getEdges()){
-            int start = e.getFromNode().getId();
-            int end = e.getToNode().getId();
-            for(int i = start; i < end; i++) stackHolder[i].add(e.getWeight());
-        }
-        int largestSize = 0;
-        for(int i = 0; i < stackHolder.length; i++) if(stackHolder[i].size()>largestSize) largestSize = stackHolder[i].size();
-        //holds all the values held by biggest stacks
-        ArrayList<ArrayList<Integer>> allBiggest = new ArrayList<>();
-        for(int i = 0; i < stackHolder.length; i++) if(stackHolder[i].size() == largestSize) allBiggest.add(stackHolder[i]);
-        // allBiggest now holds all of the greatest size paths.
-        if(allBiggest.size() == 1) return allBiggest.get(0);
-        //this makes it a little better by picking the list with the lowest highest number
-        int smallestLargest = 100000000;
-        ArrayList<Integer> bestList = new ArrayList<>();
-        for(ArrayList<Integer> list: allBiggest){
-            Collections.sort(list);
-            Collections.reverse(list);
-            if(list.get(0) < smallestLargest){
-                smallestLargest = list.get(0);
-                bestList = list;
+            int i = 1;
+            for (Path p : expandedPaths) {
+                System.out.println(p.toString());
+                expandedNetwork.printDOT("graphviz/e" + i + ".dot", p.getEdges());
+                i++;
             }
         }
-        return bestList;
-    }
-    //GREEDY
-    private static Path findFattestPath(Network network) {
-        //System.out.println(network.toString());
-        ArrayList<Integer> sortedNodes = network.topoSort();
-        int flow[] = new int[network.numNodes()];
-        Edge edges[] = new Edge[network.numNodes()];
-        for(int i = 0; i < flow.length; i++) {
-            flow[i] = -1;
-            edges[i] = null;
-        }
-        for(int u: sortedNodes) {
-            for(Edge e: network.getNode(u).getOutgoingEdges()) {
-                int v = e.getToNode().getId();
-                int weight = e.getWeight();
-                if(weight < flow[u] || flow[u] < 0) {
-                    if(weight >= flow[v]) {
-                        flow[v] = weight;
-                        edges[v] = e;
-                    }
-                } else {
-                    if(flow[u] >= flow[v]) {
-                        flow[v] = flow[u];
-                        edges[v] = e;
-                    }
-                }
-            }
-        }
-        ArrayList<Edge> pathEdges = new ArrayList<>();
-        Edge e = edges[edges.length-1];
-        while(e != null) {
-            pathEdges.add(e);
-            e = edges[e.getFromNode().getId()];
-        }
-        return new Path(pathEdges);
-    }
 
+
+        // print final results to console
+        System.out.printf("\n # Paths \t Success Rate GW \t Success Rate SF \n");
+
+        for (int i = 0; i < 10; i++) {
+            double successRateGW = ((double) resultBinsGW[i] / totals[i]) * 100;
+            double successRateSF = ((double) resultBinsSF[i] / totals[i]) * 100;
+            System.out.printf("%7d %19.2f %19.2f \n", i + 1, successRateGW, successRateSF);
+        }
+    }
 
     public static ArrayList<Network> parseGraph(ArrayList<String> graphs) {
         ArrayList<Network> networks = new ArrayList<>();
@@ -279,62 +162,6 @@ public class Main {
         }
         networks = parseGraph(graphs);
         return networks;
-    }
-
-    //picks edges randomly
-    //I just felt like adding it cause why not
-    public static Path random(Network network){
-        Random rand = new Random();
-        ArrayList<Edge> path = new ArrayList<>();
-        int cap = network.numNodes();
-        int current = 0;
-        int currentPossible;
-        int choice;
-        while(current != cap && network.getNode(current).getOutgoingEdges().size() > 0){
-            currentPossible = network.getNode(current).getOutgoingEdges().size();
-            choice = rand.nextInt(currentPossible);
-            path.add(network.getNode(current).getOutgoingEdges().get(choice));
-            current = network.getNode(current).getOutgoingEdges().get(choice).getToNode().getId();
-        }
-        Path randomPath = new Path(path);
-        return randomPath;
-    }
-
-    //does what its called
-    private static ArrayList<Integer> removeDuplicates(ArrayList<Integer> remove){
-        Set<Integer> noDuplicate = new HashSet<>();
-        noDuplicate.addAll(remove);
-        remove.clear();
-        remove.addAll(noDuplicate);
-        return remove;
-    }
-
-    //takes in network and calls reduction methods on it
-    private static void rotation(Network network){
-            network.breakItDown();
-            network.uglyBanana();
-            network.subsetGod3();
-            network.uglyBanana();
-            network.subsetGod2();
-            network.uglyBanana();
-            network.breakItDown();
-            network.uglyBanana();
-    }
-
-    //makes all possible reversals
-    private static void reversal(Network network){
-        for(int i = 0; i < network.numNodes(); i++){
-            Node m = network.identifySubgraph(network.getNode(i));
-            if(m == null) continue;
-            network.reverseGraph(network.getNode(i), m);
-            continue;
-        }
-    }
-
-    //makes reversals given a certain node
-    private static void reversalGivenNode(Network network, Node node){
-            Node m = network.identifySubgraph(node);
-            if(m != null) network.reverseGraph(node, m);
     }
 
 }

@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.*;
 public class Network {
     private ArrayList<Edge> edges;
@@ -7,6 +10,30 @@ public class Network {
         edges = new ArrayList<>();
         nodes = new ArrayList<>();
     }
+
+    public Network(Network network){
+        edges = new ArrayList<>();
+        nodes = new ArrayList<>();
+        ArrayList<Edge> oldEdges = network.getEdges();
+        int numNodes = network.numNodes();
+
+        for(int i = 0; i < numNodes; i++) {
+            addNode();
+        }
+
+        for(Edge e: oldEdges) {
+            int oldFromId = e.getFromNode().getId();
+            int oldToId = e.getToNode().getId();
+            Node fromNode = getNode(oldFromId);
+            Node toNode = getNode(oldToId);
+            int weight = e.getWeight();
+            String label = e.getLabel();
+            ArrayList<Edge> removedEdges = e.getRemovedEdges();
+            addEdge(fromNode, toNode, weight, label, removedEdges);
+        }
+
+    }
+
 
     public void addNode() {
         nodes.add(new Node(nodes.size()));
@@ -22,6 +49,13 @@ public class Network {
 
     public void addEdge(Node fromNode, Node toNode, int weight) {
         Edge newEdge = new Edge(fromNode, toNode, weight);
+        edges.add(newEdge);
+        fromNode.addEdge(newEdge);
+        toNode.addIncomingEdge(newEdge);
+    }
+
+    public void addEdge(Node fromNode, Node toNode, int weight, String label, ArrayList<Edge> removedEdges) {
+        Edge newEdge = new Edge(fromNode, toNode, weight, label, removedEdges);
         edges.add(newEdge);
         fromNode.addEdge(newEdge);
         toNode.addIncomingEdge(newEdge);
@@ -53,6 +87,27 @@ public class Network {
         edges.remove(e);
         e.getFromNode().removeOutgoingEdge(e);
         e.getToNode().removeIncomingEdge(e);
+    }
+
+    public void assignEdgeLetters() {
+        String[] letters = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+                "aa", "ab", "ac", "ad", "ae", "af", "ag", "ah", "ai", "aj", "ak", "al", "am", "an", "ao", "ap", "aq", "ar", "as", "at", "au", "av", "aw", "ax", "ay", "az",
+                "ba", "bb", "bc", "bd", "be", "bf", "bg", "bh", "bi", "bj", "bk", "bl", "bm", "bn", "bo", "bp", "bq", "br", "bs", "bt", "bu", "bv", "bw", "bx", "by", "bz",
+                "ca", "cb", "cc", "cd", "ce", "cf", "cg", "ch", "ci", "cj", "ck", "cl", "cm", "cn", "co", "cp", "cq", "cr", "cs", "ct", "cu", "cv", "cw", "cx", "cy", "cz",
+                "da", "db", "dc", "dd", "de", "df", "dg", "dh", "di", "dj", "dk", "dl", "dm", "dn", "do", "dp", "dq", "dr", "ds", "dt", "du", "dv", "dw", "dx", "dy", "dz",
+                "ea", "eb", "ec", "ed", "ee", "ef", "eg", "eh", "ei", "ej", "ek", "el", "em", "en", "eo", "ep", "eq", "er", "es", "et", "eu", "ev", "ew", "ex", "ey", "ez"};
+        int i = 0;
+        for(int nodeId : topoSort()) {
+            for(Edge e : getNode(nodeId).getOutgoingEdges()) {
+                if(i > 155) {
+                    e.setLabel("#");
+                    continue;
+                }
+
+                e.setLabel(letters[i]);
+                i++;
+            }
+        }
     }
 
     public ArrayList<Integer> topoSort() {
@@ -112,7 +167,10 @@ public class Network {
                     Node fromNode = e.getFromNode();
                     Node toNode = j.getToNode();
                     int weight = e.getWeight();
-                    addEdge(fromNode, toNode, weight);
+                    ArrayList<Edge> newRemovedNodes = new ArrayList<>();
+                    newRemovedNodes.add(e);
+                    newRemovedNodes.add(j);
+                    addEdge(fromNode, toNode, weight, e.getLabel(), newRemovedNodes);
                     eToRemove.add(e);
                     jToRemove.add(j);
                     break;
@@ -122,11 +180,27 @@ public class Network {
                 checker = false;
                 for (Edge j : jToRemove) removeEdge(j);
                 jToRemove.clear();
-                continue;
             }
         }
         for (Edge e : eToRemove) removeEdge(e);
     }
+
+    private boolean listContainsEdge(ArrayList<Edge> edgeList, Edge edge) {
+        int weight = edge.getWeight();
+        Node toNode = edge.getToNode();
+        Node fromNode = edge.getFromNode();
+        String label = edge.getLabel();
+
+        for(Edge e : edgeList) {
+            if(e.getLabel().equals(label)) {
+                System.out.println("edge found: " + e.toString());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     public boolean compareEdges(ArrayList<Integer> list1, ArrayList<Integer> list2) {
         //checks if two arraylists have the same set of integers
@@ -739,4 +813,60 @@ public class Network {
         for(Edge e : toRemove) removeEdge(e);
         for(Edge e : toAdd) addEdge(e);
     }
+
+
+    public void printDOT(String filename) {
+        File outputFile = new File(filename);
+        PrintWriter out = null;
+
+        try {
+            out = new PrintWriter(outputFile);
+
+            out.println("digraph G {");
+            out.printf("\trankdir=\"LR\"\n");
+
+            for(Edge e: edges) {
+                int fromNodeId = e.getFromNode().getId();
+                int toNodeId = e.getToNode().getId();
+                int weight = e.getWeight();
+                out.printf("\t%d -> %d [label=\"%s - %d\"]\n", fromNodeId, toNodeId, e.getLabel(), weight);
+            }
+
+            out.println("}");
+        } catch (FileNotFoundException e) {
+            System.out.println("file not found.");
+            e.printStackTrace();
+        } finally {
+            out.close();
+        }
+    }
+
+    public void printDOT(String filename, ArrayList<Edge> pathEdges) {
+        File outputFile = new File(filename);
+        PrintWriter out = null;
+
+        try {
+            out = new PrintWriter(outputFile);
+
+            out.println("digraph G {");
+            out.printf("\trankdir=\"LR\"\n");
+
+            for(Edge e: edges) {
+                int fromNodeId = e.getFromNode().getId();
+                int toNodeId = e.getToNode().getId();
+                int weight = e.getWeight();
+                String color = "black";
+                if(listContainsEdge(pathEdges, e)) color = "red";
+                out.printf("\t%d -> %d [label=\"%s - %d\", color=\"%s\"]\n", fromNodeId, toNodeId, e.getLabel(), weight, color);
+            }
+
+            out.println("}");
+        } catch (FileNotFoundException e) {
+            System.out.println("file not found.");
+            e.printStackTrace();
+        } finally {
+            out.close();
+        }
+    }
+
 }
