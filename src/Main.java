@@ -7,13 +7,14 @@ public class Main {
     public static void main(String args[]) {
 
             String directory = "/home/dan/dev/instances/rnaseq/";
-            String animal = "test";
+            String animal = "human";
             boolean debug = false;
 
             ArrayList<Network> networks;
             PrintWriter out = null;
             int[] resultBinsGW = new int[101];
             int[] resultBinsSF = new int[101];
+            int[] resultBinsGER = new int[101];
             int[] totals = new int[101];
             ArrayList<Path> paths = new ArrayList<>();
             Network expandedNetwork = null;
@@ -28,6 +29,7 @@ public class Main {
                 for (int i = 0; i < 101; i++) {
                     resultBinsGW[i] = 0;
                     resultBinsSF[i] = 0;
+                    resultBinsGER[i] = 0;
                     totals[i] = 0;
                 }
 
@@ -45,20 +47,25 @@ public class Main {
 
                         GreedyWidth greedyWidth = new GreedyWidth();
                         SwedishFish swedishFish = new SwedishFish();
+                        GreedyEdgeRemove greedyEdgeRemove = new GreedyEdgeRemove();
 
                         int count = 0;
                         for (Network network : networks) {
 
-                            ArrayList<Path> greedyWidthPaths = greedyWidth.run(network);
-                            ArrayList<Path> swedishFishPaths = swedishFish.run(network, debug);
-                            //ArrayList<Path> swedishFishPaths = new ArrayList<>();
+                            Network network1 = new Network(network);
+                            Network network2 = new Network(network);
+                            Network network3 = new Network(network);
+                            ArrayList<Path> greedyWidthPaths = greedyWidth.run(network1);
+                            ArrayList<Path> swedishFishPaths = swedishFish.run(network2, debug);
+                            ArrayList<Path> greedyEdgeRemovePaths = greedyEdgeRemove.run(network3, debug);
 
                             int truthPaths = numTruthPaths.get(count);
-                            if(debug) out.printf("%d \t # Truth Paths = %d \t # GreedyWidth Paths = %d \t # SwedishFish Paths = %d \t \n",
-                                    count, truthPaths, greedyWidthPaths.size(), swedishFishPaths.size());
+                            if(debug) out.printf("%d \t # Truth Paths = %d \t # GreedyWidth Paths = %d \t # SwedishFish Paths = %d \t # GER Paths = %d \n",
+                                    count, truthPaths, greedyWidthPaths.size(), swedishFishPaths.size(), greedyEdgeRemovePaths.size());
 
                             if (greedyWidthPaths.size() <= truthPaths) resultBinsGW[truthPaths - 1]++;
                             if (swedishFishPaths.size() <= truthPaths) resultBinsSF[truthPaths - 1]++;
+                            if (greedyEdgeRemovePaths.size() <= truthPaths) resultBinsGER[truthPaths - 1]++;
                             count++;
                         }
                     }
@@ -91,19 +98,21 @@ public class Main {
             int i = 1;
             for (Path p : expandedPaths) {
                 System.out.println(p.toString());
-                expandedNetwork.printDOT("graphviz/e" + i + ".dot", p.getEdges());
+                //expandedNetwork.printDOT("graphviz/e" + i + ".dot", p.getEdges());
                 i++;
             }
         }
 
 
         // print final results to console
-        System.out.printf("\n # Paths \t Success Rate GW \t Success Rate SF \n");
+        System.out.printf("Results for %s\n\n", animal);
+        System.out.printf("\n # Paths \t Success Rate GW \t Success Rate SF \t Success Rate GER \n");
 
         for (int i = 0; i < 10; i++) {
             double successRateGW = ((double) resultBinsGW[i] / totals[i]) * 100;
             double successRateSF = ((double) resultBinsSF[i] / totals[i]) * 100;
-            System.out.printf("%7d %19.2f %19.2f \n", i + 1, successRateGW, successRateSF);
+            double successRateGER = ((double) resultBinsGER[i] / totals[i]) * 100;
+            System.out.printf("%7d %19.2f %19.2f %19.2f\n", i + 1, successRateGW, successRateSF, successRateGER);
         }
     }
 

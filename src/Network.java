@@ -69,6 +69,59 @@ public class Network {
         }
     }
 
+    public void removeNode(Node node) {
+        Node fromNode = node.getFromNodes().get(0);
+        Node toNode = node.getToNodes().get(0);
+        Edge outGoing = getEdge(node, toNode);
+        Edge inComing = getEdge(fromNode, node);
+
+        ArrayList<Edge> removedEdges = new ArrayList<>();
+        removedEdges.add(outGoing);
+        removedEdges.add(inComing);
+
+        for(Edge removedIncoming : inComing.getRemovedEdges()) {
+            if(!listContainsEdge(removedEdges, removedIncoming)) removedEdges.add(removedIncoming);
+        }
+
+        for(Edge removedOutgoing : outGoing.getRemovedEdges()) {
+            if(!listContainsEdge(removedEdges, removedOutgoing)) removedEdges.add(removedOutgoing);
+        }
+
+        addEdge(fromNode, toNode, inComing.getWeight(), inComing.getLabel(), removedEdges);
+        removeEdge(outGoing);
+        removeEdge(inComing);
+        //System.out.println("UPDATED: " + node.printEdges());
+        //System.out.println("fromNode = " + fromNode.printEdges());
+        //System.out.println("toNode = " + toNode.printEdges());
+    }
+
+    public Edge getEdge(Node fromNode, Node toNode){
+        return fromNode.findOutgoingEdge(toNode);
+    }
+
+    public void collapseEdges() {
+        ArrayList<Node> toRemove = new ArrayList<>();
+        for(Node node: nodes) {
+            if(node.numIncomingEdges() == 1 && node.numOutgoingEdges() == 1) {
+                removeNode(node);
+            }
+        }
+
+        //remove & renumber nodes
+        int i = 0;
+        ArrayList<Node> tempNodes = new ArrayList<>();
+        tempNodes.addAll(nodes);
+        for(Node n: nodes) {
+            if(n.numOutgoingEdges() == 0 && n.numIncomingEdges() == 0) {
+                tempNodes.remove(n);
+            } else {
+                n.setId(i);
+                i++;
+            }
+        }
+        nodes = tempNodes;
+    }
+
     public String toString() {
         String str = "Network: " + numEdges() + " edges, " + numNodes() + " nodes\n";
         for (Edge e : edges) str += e.toString() + " ";
@@ -193,7 +246,7 @@ public class Network {
 
         for(Edge e : edgeList) {
             if(e.getLabel().equals(label)) {
-                System.out.println("edge found: " + e.toString());
+                //System.out.println("edge found: " + e.toString());
                 return true;
             }
         }

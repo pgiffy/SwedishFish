@@ -7,9 +7,9 @@ public class SwedishFish {
 
     public ArrayList<Path> run(Network network, boolean debug) {
         ArrayList<Path> paths = new ArrayList<>();
-        network.assignEdgeLetters();
+        //network.assignEdgeLetters();
 
-        if(debug) network.printDOT("graph.dot");
+        //if(debug) network.printDOT("graph.dot");
 
         try {// sometimes in salmon there are graphs that overload the stack so this try catch is implemented to deal with that
             //currently is just skips the graph so report on that when writing
@@ -171,6 +171,7 @@ public class SwedishFish {
         }
         return bestList;
     }
+
 
     //GREEDY
     private static Path findFattestPath(Network network) {
