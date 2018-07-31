@@ -27,4 +27,31 @@ public class Node {
     public void setId(int newId) { id = newId; }
 
     public String toString() { return "<" + id + ">"; }
+
+    public ArrayList<Node> getToNodes(){
+        ArrayList<Node> toNodes = new ArrayList<>();
+        for(Edge e: outgoingEdges) {
+            toNodes.add(e.getToNode());
+        }
+        return toNodes;
+    }
+
+    public ArrayList<Node> getFromNodes() {
+        ArrayList<Node> fromNodes = new ArrayList<>();
+        for(Edge e: incomingEdges) {
+            fromNodes.add(e.getFromNode());
+        }
+        return fromNodes;
+    }
+
+    public Edge findOutgoingEdge(Node toNode){
+        for(int i = 0; i < outgoingEdges.size(); i++){
+            if(outgoingEdges.get(i).getToNode() == toNode){
+                return outgoingEdges.get(i);
+            }
+        }
+        return null;
+    }
+
+
 }
