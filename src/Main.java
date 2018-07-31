@@ -17,7 +17,6 @@ public class Main {
             int[] resultBinsGER = new int[101];
             int[] totals = new int[101];
             ArrayList<Path> paths = new ArrayList<>();
-            Network expandedNetwork = null;
 
             try {
 
@@ -95,11 +94,8 @@ public class Main {
                 expandedPaths.add(expandedPath);
             }
 
-            int i = 1;
             for (Path p : expandedPaths) {
                 System.out.println(p.toString());
-                //expandedNetwork.printDOT("graphviz/e" + i + ".dot", p.getEdges());
-                i++;
             }
         }
 

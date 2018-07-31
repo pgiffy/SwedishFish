@@ -7,12 +7,7 @@ public class GreedyEdgeRemove {
 
         network.assignEdgeLetters();
         network.collapseEdges();
-        /*
-        ArrayList<Edge> eList = network.getEdges();
-        for(Edge e : eList) {
-            System.out.println(e.toString() + ": " + e.getRemovedEdges().toString());
-        }
-        /* */
+
         paths.clear();
         if(network.numEdges() > 60) {
 
@@ -24,8 +19,6 @@ public class GreedyEdgeRemove {
 
         } else {
             ArrayList<Integer> predictedTruthWeights = getPredictedTruthWeights(network);
-            //System.out.println(predictedTruthWeights.toString());
-            //ArrayList<Integer> predictedTruthWeights = new ArrayList<>();
             if (debug) network.printDOT("graph.dot");
 
             int x = 1;
@@ -105,7 +98,6 @@ public class GreedyEdgeRemove {
 
             }
 
-            //System.out.println(nodeId+": "+thisNodeData.toString());
         }
 
 
@@ -139,8 +131,6 @@ public class GreedyEdgeRemove {
             }
         }
 
-        //System.out.println(duplicates.toString());
-
         int minDuplicates = -1;
         ArrayList<String> idList = new ArrayList<>();
         for(Map.Entry<String, Integer> item : duplicates.entrySet()) {
@@ -163,10 +153,7 @@ public class GreedyEdgeRemove {
             }
         }
 
-        //System.out.println(possiblePaths.toString());
-        //System.out.println(predictedTruthWeights.toString());
-
-        //1.5 tie-breaker: take paths that match a predicted truth weight
+        //2nd tie-breaker: take paths that match a predicted truth weight
         ArrayList<Path> possiblePaths1 = new ArrayList<>();
         for(Path p : possiblePaths) {
             if(predictedTruthWeights.contains(p.getWeight())) {
@@ -178,7 +165,7 @@ public class GreedyEdgeRemove {
             possiblePaths1.addAll(possiblePaths);
         }
 
-        //2nd tie-breaker: take the path with the least number of predicted truth weights
+        //3rd tie-breaker: take the path with the least number of predicted truth weights
         // (that aren't the path weight)
 
         int minNumTruthEdges = -1;
@@ -198,28 +185,6 @@ public class GreedyEdgeRemove {
                 possiblePaths2.add(p);
             }
         }
-
-        //3rd tie-breaker: take the path that has the least number of distinct edge weights
-        /*
-        ArrayList<Integer> foundWeights = new ArrayList<>();
-        ArrayList<Path> possiblePaths3 = new ArrayList<>();
-        int minNumFoundWeights = -1;
-        System.out.println("***");
-        for(Path p : possiblePaths2) {
-            foundWeights.clear();
-            for(Edge e : p.getEdges()) {
-                if(!foundWeights.contains(e.getWeight())) {
-                    foundWeights.add(e.getWeight());
-                }
-            }
-
-            if(foundWeights.size() <= minNumFoundWeights || minNumFoundWeights < 0) {
-                if(foundWeights.size() != minNumFoundWeights) possiblePaths3.clear();
-                possiblePaths3.add(p);
-                minNumFoundWeights = foundWeights.size();
-            }
-        }
-        */
 
         //4th tie-breaker: take the path that contains the least number of truth-weights *after subtracting
         //each individual truth weight
@@ -244,14 +209,12 @@ public class GreedyEdgeRemove {
             selectedPath = possiblePaths2.get(0);
         }
 
-        //System.out.println(selectedPath.getEdges().toString());
-
-
         return selectedPath;
     }
 
+
+    // find the path that can carry the largest flow
     private static Path findFattestPath(Network network) {
-        //System.out.println(network.toString());
         ArrayList<Integer> sortedNodes = network.topoSort();
         int flow[] = new int[network.numNodes()];
         Edge edges[] = new Edge[network.numNodes()];

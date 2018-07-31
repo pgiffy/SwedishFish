@@ -14,6 +14,7 @@ public class GreedyWidth {
         return paths;
     }
 
+    //finds the path that can carry the greatest flow
     private static Path findFattestPath(Network network) {
         //System.out.println(network.toString());
         ArrayList<Integer> sortedNodes = network.topoSort();
