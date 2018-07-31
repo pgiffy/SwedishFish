@@ -1,8 +1,8 @@
 # SwedishFish
-This was created during the 2018 summer REU ad MSU.
-I was working with Dan Wood from Michigan Tech.
+This was created during the 2018 summer REU at MSU.
+This was made by Peter Gifford from MSU (me) and Dan Wood from Michigan Tech.
 
-This program is the implementation of several algorithms to reconstruct RNA sequences.
+This program is the implementation of several algorithms to reconstruct RNA sequences an NP-Hard problem.
 
 There is the SwedishFish algorithm which focuses on breaking down the graph to its simplest form and taking a cut of the graph to pick edges.
 
