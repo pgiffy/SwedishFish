@@ -15,7 +15,7 @@ The data being used is based on the Salmon and Flux papers that generate synthet
 
 The data can be found at here: https://cmu.app.box.com/s/p687exyr279wny7fb2rb36wifvavvu3f
 
-This data was borrowed from an algorithm called catfish. We were tasked with beating catfish, so we are using identical data sets so comparison will be unbiased.
+This data was borrowed from an algorithm called catfish (https://github.com/Kingsford-Group/catfish). We were tasked with beating catfish, so we are using identical data sets so comparison will be unbiased.
 
 # Presentation
 A poster on this was presented at MSU, and a paper will most likely be written in the near future.
