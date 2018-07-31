@@ -98,8 +98,6 @@ public class Main {
                 System.out.println(p.toString());
             }
         }
-
-
         // print final results to console
         System.out.printf("Results for %s\n\n", animal);
         System.out.printf("\n # Paths \t Success Rate GW \t Success Rate SF \t Success Rate GER \n");
@@ -168,5 +166,4 @@ public class Main {
         networks = parseGraph(graphs);
         return networks;
     }
-
 }
