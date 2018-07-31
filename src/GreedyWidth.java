@@ -23,29 +23,28 @@ public class GreedyWidth {
             flow[i] = -1;
             edges[i] = null;
         }
+
         for(int u: sortedNodes) {
             for(Edge e: network.getNode(u).getOutgoingEdges()) {
                 int v = e.getToNode().getId();
                 int weight = e.getWeight();
-                if(weight < flow[u] || flow[u] < 0) {
-                    if(weight >= flow[v]) {
-                        flow[v] = weight;
-                        edges[v] = e;
-                    }
-                } else {
-                    if(flow[u] >= flow[v]) {
-                        flow[v] = flow[u];
-                        edges[v] = e;
-                    }
+                if((weight < flow[u] || flow[u] < 0) && weight >= flow[v]) {
+                    flow[v] = weight;
+                    edges[v] = e;
+                } else if(flow[u] >= flow[v]) {
+                    flow[v] = flow[u];
+                    edges[v] = e;
                 }
             }
         }
+
         ArrayList<Edge> pathEdges = new ArrayList<>();
         Edge e = edges[edges.length-1];
         while(e != null) {
             pathEdges.add(e);
             e = edges[e.getFromNode().getId()];
         }
+
         return new Path(pathEdges);
     }
 }

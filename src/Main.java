@@ -7,8 +7,8 @@ public class Main {
     public static void main(String args[]) {
 
             String directory = "/home/dan/dev/instances/rnaseq/";
-            String animal = "human";
-            boolean debug = false;
+            String animal = "test";
+            boolean debug = true;
 
             ArrayList<Network> networks;
             PrintWriter out = null;
