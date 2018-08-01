@@ -17,5 +17,9 @@ The data can be found at here: https://cmu.app.box.com/s/p687exyr279wny7fb2rb36w
 
 This data was borrowed from an algorithm called catfish (https://github.com/Kingsford-Group/catfish). We were tasked with beating catfish, so we are using identical data sets so comparison will be unbiased.
 
+At the top of main there is a directory and animal variable that should be changed to the appropriate location and desired animal. The options are: human,zebrafish, mouse, and salmon (salmon is significantly larger than the others).
+
+There is also data availible for synthetc randomly generated graphs. The number of paths on these is larer than ten, so to get data from them, some of the statements throughout main need to be altered to allow for bigger number outputs.
+
 # Presentation
 A poster on this was presented at MSU, and a paper will most likely be written in the near future.
