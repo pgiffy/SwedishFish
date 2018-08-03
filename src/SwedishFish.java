@@ -16,13 +16,14 @@ public class SwedishFish {
             network.collapseEdges2();
             for (int i = 0; i < 7; i++) {
                 //collapse down the network as much as possible before removing any edges
+                //these two steps preserve guarenteed correct paths and optimization
                 network.breakItDown();
-                network.uglyBanana();
+                network.collapseEdges2();
             }
             reversal(network);
             for (int i = 0; i < 2; i++) {
                 //collapse down the network as much as possible before removing any edges
-                network.breakItDown();
+                network.dynamicBreak();
                 network.uglyBanana();
             }
             for (int i = 0; i < 3; i++) rotation(network);
