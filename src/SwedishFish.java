@@ -80,13 +80,13 @@ public class SwedishFish {
 
     //takes in network and calls reduction methods on it
     private static void rotation(Network network) {
-        network.breakItDown();
+        network.dynamicBreak();
         network.uglyBanana();
-        network.subsetGod3();
+        network.dynamicBreak();
         network.uglyBanana();
-        network.subsetGod2();
+        network.dynamicBreak();
         network.uglyBanana();
-        network.breakItDown();
+        network.dynamicBreak();
         network.uglyBanana();
     }
 
