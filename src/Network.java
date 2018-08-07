@@ -924,6 +924,8 @@ public class Network {
     
     public void dynamicBreak(){
         for(int i: topoSort()){
+            //runs if there is a single edge entering of leaving node with greater than one edge on the other end. 
+            //does not preserve optimality
             if (getNode(i).numIncomingEdges() > 1 && getNode(i).numOutgoingEdges() == 1) {
                 Node newEnd = getNode(i).getOutgoingEdges().get(0).getToNode();
                 removeEdge(getNode(i).getOutgoingEdges().get(0));
@@ -938,7 +940,8 @@ public class Network {
                     addEdge(newEnd, getNode(i), e.getWeight());
                 }
             }
-
+            //runs a subsets breakdown if there are two edges entering with multiple edges leaving or vice versa 
+            //does not preserve optimality
             if(getNode(i).getOutgoingEdges().size() == 2 && getNode(i).getOutgoingEdges().size() < getNode(i).getIncomingEdges().size()){
                 ArrayList <Integer> incomingWeights = new ArrayList<>();
                 ArrayList<ArrayList<Integer>> one;
@@ -1103,7 +1106,8 @@ public class Network {
                 for(Edge e: toRemove) removeEdge(e);
                 toRemove.clear();
             }
-
+            //runs the subsets sums breakdown if there are three edges entering or leaving a node with greater than that entering
+            //does not preserve optimality
             if(getNode(i).getOutgoingEdges().size() == 3 && getNode(i).getOutgoingEdges().size() < getNode(i).getIncomingEdges().size()){
                 ArrayList <Integer> incomingWeights = new ArrayList<>();
                 ArrayList<ArrayList<Integer>> one;
