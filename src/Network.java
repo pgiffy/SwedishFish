@@ -212,11 +212,9 @@ public class Network {
         //removes nodes after collapse edges2
         ArrayList<Edge> eToRemove = new ArrayList<>();
         ArrayList<Edge> jToRemove = new ArrayList<>();
-        boolean checker = false;
         for (Edge e : node.getIncomingEdges()) {
             for (Edge j : node.getOutgoingEdges()) {
                 if (e.getWeight() == j.getWeight()) {
-                    checker = true;
                     Node fromNode = e.getFromNode();
                     Node toNode = j.getToNode();
                     int weight = e.getWeight();
@@ -229,11 +227,8 @@ public class Network {
                     break;
                 }
             }
-            if (checker) {
-                checker = false;
                 for (Edge j : jToRemove) removeEdge(j);
                 jToRemove.clear();
-            }
         }
         for (Edge e : eToRemove) removeEdge(e);
     }
