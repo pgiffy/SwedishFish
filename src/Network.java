@@ -397,6 +397,7 @@ public class Network {
                             checker = true;
                             break;
                         }
+                        all.clear();
                     }
                     if(checker) break;
                 }
@@ -479,6 +480,7 @@ public class Network {
                             checker = true;
                             break;
                         }
+                        all.clear();
                     }
                     if(checker) break;
                 }
@@ -583,6 +585,7 @@ public class Network {
                                 checker = true;
                                 break;
                             }
+                            all.clear();
                         }
                         if(checker) break;
                     }
@@ -691,6 +694,7 @@ public class Network {
                                 checker = true;
                                 break;
                             }
+                            all.clear();
                         }
                         if(checker) break;
                     }
@@ -998,6 +1002,7 @@ public class Network {
                             checker = true;
                             break;
                         }
+                        all.clear();
                     }
                     if(checker) break;
                 }
@@ -1080,6 +1085,7 @@ public class Network {
                             checker = true;
                             break;
                         }
+                        all.clear();
                     }
                     if(checker) break;
                 }
@@ -1181,6 +1187,7 @@ public class Network {
                                 checker = true;
                                 break;
                             }
+                            all.clear();
                         }
                         if(checker) break;
                     }
@@ -1289,6 +1296,7 @@ public class Network {
                                 checker = true;
                                 break;
                             }
+                            all.clear();
                         }
                         if(checker) break;
                     }
