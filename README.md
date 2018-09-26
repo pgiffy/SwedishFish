@@ -13,7 +13,7 @@ The program in its current state will run these algorithms and Greedy Width so t
 # Datasets
 The data being used is based on the Salmon and Flux papers that generate synthetic versions of RNA data for different animals.
 
-The data can be found at here: https://cmu.app.box.com/s/p687exyr279wny7fb2rb36wifvavvu3f
+The data can be found at here: https://montana.box.com/s/x5t6jvfl9ajvns75xnj8fvicsajhbkan
 
 This data was borrowed from an algorithm called catfish (https://github.com/Kingsford-Group/catfish). We were tasked with beating catfish, so we are using identical data sets so comparison will be unbiased.
 
